@@ -1,0 +1,16 @@
+# Lua
+*.luac
+*.lua~
+
+# Cursor IDE（保留项目内 skills）
+.cursor/*
+!.cursor/skills/
+!.cursor/skills/**
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+.env
+*.pem
