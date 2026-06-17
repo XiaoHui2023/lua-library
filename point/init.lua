@@ -1,0 +1,3 @@
+---@class lib.point
+---@field x number
+---@field y number
