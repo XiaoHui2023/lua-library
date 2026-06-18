@@ -50,8 +50,8 @@ local function normalize_driver(driver)
     }
 end
 
----@param driver? table|fun(trigger: fun(), interval_time: number): any
----@param interval_time? number
+---@param driver? table|fun(trigger:function, interval_time:number) 定时器驱动
+---@param interval_time? number 定时器间隔，单位秒
 function M.set_driver(driver, interval_time)
     timer_driver = normalize_driver(driver)
     if interval_time ~= nil then
@@ -60,8 +60,8 @@ function M.set_driver(driver, interval_time)
     end
 end
 
----@param loop_func? fun(trigger: fun(), interval_time: number): any
----@param interval_time? number
+---@param loop_func? fun(trigger:function, interval_time:number) 循环调度函数
+---@param interval_time? number 循环间隔，单位秒
 function M.set_loop(loop_func, interval_time)
     M.set_driver(loop_func, interval_time)
 end
@@ -70,7 +70,7 @@ function M.get_default_interval_time()
     return default_interval_time
 end
 
----@param args { action: fun(...), interval_time?: number, name?: string }
+---@param args table 定时器配置
 ---@return table
 function M.new(args)
     args = args or {}

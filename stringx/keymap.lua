@@ -1,6 +1,6 @@
 ---@class lib.stringx.keymap.config
----@field name_to_code table<string, integer>?
----@field code_to_name table<integer, string>?
+---@field name_to_code table<string, 字段说明
+---@field code_to_name table<integer, 字段说明
 
 ---@class lib.stringx.keymap
 local M = {}
@@ -98,7 +98,7 @@ function M.add_display_name(code, name)
     code_to_name[code] = name
 end
 
----@param config lib.stringx.keymap.config?
+---@param config lib.stringx.keymap.config? 参数说明
 function M.configure(config)
     clear(name_to_code)
     clear(code_to_name)
@@ -127,13 +127,13 @@ function M.configure(config)
 end
 
 ---@param value string
----@return integer?
+---@return integer? 返回值
 function M.code_for(value)
     return name_to_code[normalize_name(value)]
 end
 
 ---@param code integer
----@return string?
+---@return string? 返回值
 function M.name_for(code)
     return code_to_name[code]
 end

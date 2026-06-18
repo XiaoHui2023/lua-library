@@ -14,20 +14,37 @@ local M = {}
 
 local FACTORY_FIELD = "factory"
 
----@class lib.reactive.factory.options
----@field name? string
----@field parent? table
----@field debug? boolean
----@field interval_time? number
+---@class lib.reactive.factory
+---@field _is_reactive_factory boolean 响应式工厂标记
+---@field owner table 拥有该工厂的对象
+---@field name lib.reactive.ref 工厂短名称
+---@field parent lib.reactive.ref 父对象引用
+---@field full_name lib.reactive.computed 完整名称
+---@field children table<string, table> 已捕获的子对象
+---@field on_dispose table 销毁监听器
+---@field set fun(...:any):lib.reactive.ref 创建响应式引用
+---@field ref fun(args?:table):lib.reactive.ref 创建响应式引用
+---@field add fun(args?:table):lib.reactive.collection 创建响应式集合
+---@field computed fun(args:table|function):lib.reactive.computed 创建计算值
+---@field event fun(args?:table):lib.reactive.event 创建普通事件
+---@field once_event fun(args?:table):lib.reactive.event 创建一次性事件
+---@field semaphore fun(args?:table):lib.reactive.semaphore 创建信号量
+---@field scope fun(args?:table):table 创建释放作用域
 
----@param loop_func? fun(func: fun(), interval?: number): fun()
----@param interval_time? number
+---@class lib.reactive.factory.options
+---@field name? string 工厂名称
+---@field parent? table 父对象
+---@field debug? boolean 是否打印调试信息
+---@field interval_time? number 默认定时器间隔，单位秒
+
+---@param loop_func? fun(func:function, interval_time:number) 循环调度函数
+---@param interval_time? number 循环间隔，单位秒
 function M.set_timer_loop(loop_func, interval_time)
     timer.set_loop(loop_func, interval_time)
 end
 
----@param driver? table|fun(trigger: fun(), interval_time: number): any
----@param interval_time? number
+---@param driver? table|fun(trigger:function, interval_time:number) 定时器驱动
+---@param interval_time? number 定时器间隔，单位秒
 function M.set_timer_driver(driver, interval_time)
     timer.set_driver(driver, interval_time)
 end
@@ -64,7 +81,7 @@ local function dispose_model(model)
 end
 
 ---@param owner table
----@param args? { name?: string, parent?: table, debug?: boolean }
+---@param args? table 绑定工厂配置
 ---@return table
 local function attach(owner, args)
     args = args or {}
@@ -559,7 +576,7 @@ local function attach(owner, args)
     return factory
 end
 
----@param args? { name?: string, parent?: table, debug?: boolean }
+---@param args? lib.reactive.factory.options 工厂配置
 ---@return table
 function M.new(args)
     local owner = {}
@@ -568,7 +585,7 @@ function M.new(args)
 end
 
 ---@param owner table
----@param args? { name?: string, parent?: table, debug?: boolean }
+---@param args? lib.reactive.factory.options 工厂配置
 ---@return table
 function M.attach(owner, args)
     assert(type(owner) == "table", "factory.attach requires owner table")

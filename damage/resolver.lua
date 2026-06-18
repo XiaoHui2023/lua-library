@@ -1,6 +1,6 @@
 local M = {}
 
----@param context? lib.damage.context
+---@param context? lib.damage.context 参数说明
 ---@return lib.damage.context
 local function normalize_context(context)
     context = context or {}
@@ -112,7 +112,7 @@ local function run_damage_resolution(self, state)
 end
 
 ---@param self lib.damage
----@param context? lib.damage.context
+---@param context? lib.damage.context 参数说明
 ---@return lib.damage.result
 function M.resolve(self, context)
     local state = create_state(normalize_context(context))

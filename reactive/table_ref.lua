@@ -6,7 +6,7 @@ local track = require "reactive.track"
 
 local M = {}
 
----@param args? { value?: table, key_checker?: fun(k:any):boolean, value_checker?: fun(v:any):boolean, equals?: fun(a:any,b:any):boolean, name?: string }
+---@param args? table 字典引用配置
 ---@return table
 function M.new(args)
     args = args or {}

@@ -27,8 +27,19 @@ local function report_error(err, info)
     print(err)
 end
 
----@param args? { mode?: string, replay?: boolean, name?: string }
----@return table
+---@class lib.reactive.event<T>
+---@field type "event" 事件类型标记
+---@field mode string 触发模式
+---@field add fun(action:function):function 添加监听并返回取消函数
+---@field add_and_run fun(action:function):function 添加监听后立即运行一次
+---@field run fun(...:any) 触发事件
+---@field clear fun() 清空监听
+---@field attach fun(item:function|table):function 挂载函数或可释放对象
+---@field mount fun(item:function|table):function 挂载函数或可释放对象
+---@field as_listener fun():table 返回只暴露监听能力的对象
+
+---@param args? table 事件配置
+---@return lib.reactive.event
 function M.new(args)
     args = args or {}
     local mode = args.mode or "always"
@@ -288,8 +299,8 @@ function M.new(args)
     return o
 end
 
----@param args? table
----@return table
+---@param args? table 一次性事件配置
+---@return lib.reactive.event
 function M.once(args)
     args = args or {}
     args.mode = "once"

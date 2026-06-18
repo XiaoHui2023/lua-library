@@ -2,7 +2,7 @@
 local metatablex = require "lib.metatablex"
 ---@type lib.reactive
 local reactive = require "lib.reactive"
----@type fun(tb?: table): lib.list
+---@type fun(tb?:
 local list = require "lib.list"
 
 ---@class lib.addon
@@ -154,14 +154,14 @@ local next_id = 1
 
 ---@class lib.addon.options : lib.reactive.factory.options
 ---@field name string
----@field description? string
----@field dependencies? lib.addon[]
----@field tags? string[]
----@field category? string
----@field is_enabled? boolean
----@field is_unlocked? boolean
----@field is_visible? boolean
----@field priority? integer
+---@field description? string 字段说明
+---@field dependencies? lib.addon[] 字段说明
+---@field tags? string[] 字段说明
+---@field category? string 字段说明
+---@field is_enabled? boolean 字段说明
+---@field is_unlocked? boolean 字段说明
+---@field is_visible? boolean 字段说明
+---@field priority? integer 字段说明
 
 ---@param args lib.addon.options
 ---@return lib.addon

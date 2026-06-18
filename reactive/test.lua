@@ -61,6 +61,21 @@ end)
 normalized.set(-1)
 assert_same(normalized(), 0, "ref normalize should transform writes")
 
+local position = reactive.ref({ x = 1, y = 2 })
+local position_changes = 0
+position.wrap_equal(function(new_position, old_position)
+    return old_position ~= nil
+        and new_position.x == old_position.x
+        and new_position.y == old_position.y
+end)
+position.on_change.add(function()
+    position_changes = position_changes + 1
+end)
+position.set({ x = 1, y = 2 })
+assert_same(position_changes, 1, "ref wrap_equal should skip equivalent table values")
+position.set({ x = 2, y = 2 })
+assert_same(position_changes, 2, "ref wrap_equal should still emit changed values")
+
 local table_ref = reactive.table()
 table_ref.set("row", 1, "cell")
 assert_same(table_ref.get("row", 1), "cell", "table ref should support multi-part keys")

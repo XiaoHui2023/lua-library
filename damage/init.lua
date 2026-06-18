@@ -23,14 +23,14 @@ M.modifier_phase = create_phase
 ---| "max"
 
 ---@class lib.damage.context
----@field damage? number
----@field base_damage? number
----@field source? any
----@field target? any
----@field has_control? boolean
----@field has_cc? boolean
----@field tags? table<string, boolean>
----@field data? table
+---@field damage? number 字段说明
+---@field base_damage? number 字段说明
+---@field source? any 字段说明
+---@field target? any 字段说明
+---@field has_control? boolean 字段说明
+---@field has_cc? boolean 字段说明
+---@field tags? table<string, 字段说明
+---@field data? table 字段说明
 
 ---@class lib.damage.state
 ---@field context lib.damage.context
@@ -43,9 +43,9 @@ M.modifier_phase = create_phase
 ---@field has_damage boolean
 ---@field has_control boolean
 ---@field stopped boolean
----@field stop_reason? string
----@field source? any
----@field target? any
+---@field stop_reason? string 字段说明
+---@field source? any 字段说明
+---@field target? any 字段说明
 ---@field applied_modifiers lib.damage.applied_modifier[]
 
 ---@class lib.damage.result
@@ -56,22 +56,22 @@ M.modifier_phase = create_phase
 ---@field has_control boolean
 ---@field damage_immune boolean
 ---@field control_immune boolean
----@field source? any
----@field target? any
+---@field source? any 字段说明
+---@field target? any 字段说明
 ---@field context lib.damage.context
 ---@field applied_modifiers lib.damage.applied_modifier[]
 
 ---@class lib.damage.modifier
----@field callback fun(state:lib.damage.state,value?:any,modifier?:lib.damage.modifier):any?
----@field condition? fun(state:lib.damage.state,modifier:lib.damage.modifier):boolean
----@field priority? number
----@field enabled? boolean
----@field owner? any
----@field source? any
----@field name? string
----@field uses? integer
----@field remove_after_use? boolean
----@field delete? fun()
+---@field callback fun(state:lib.damage.state,value?:any,modifier?:lib.damage.modifier):any? 字段说明
+---@field condition? fun(state:lib.damage.state,modifier:lib.damage.modifier):boolean 字段说明
+---@field priority? number 字段说明
+---@field enabled? boolean 字段说明
+---@field owner? any 字段说明
+---@field source? any 字段说明
+---@field name? string 字段说明
+---@field uses? integer 字段说明
+---@field remove_after_use? boolean 字段说明
+---@field delete? fun() 字段说明
 
 ---@class lib.damage.applied_modifier
 ---@field phase string
@@ -79,7 +79,7 @@ M.modifier_phase = create_phase
 ---@field before any
 ---@field after any
 
----@param args? lib.reactive.factory.options
+---@param args? lib.reactive.factory.options 参数说明
 ---@return lib.damage
 function M.create(args)
     ---@class lib.damage: lib.reactive.factory
@@ -141,7 +141,7 @@ function M.create(args)
         return effect.add(o, options)
     end
 
-    ---@param context? lib.damage.context
+    ---@param context? lib.damage.context 参数说明
     ---@return lib.damage.result
     function o.run(context)
         return resolver.resolve(o, context)

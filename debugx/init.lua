@@ -1,15 +1,15 @@
 ---@class lib.debugx
-local g = {}
+local M = {}
 
 ---@type lib.tablex
 local tablex = require "lib.tablex"
 
 ---@class lib.debugx.backend
----@field debug? fun(...)
----@field info? fun(...)
----@field warn? fun(...)
----@field error? fun(msg: string)
----@field get_debug_mode? fun(): boolean
+---@field debug? fun(...) 字段说明
+---@field info? fun(...) 字段说明
+---@field warn? fun(...) 字段说明
+---@field error? fun(msg: 字段说明
+---@field get_debug_mode? fun(): 字段说明
 
 ---@type lib.debugx.backend
 local backend = {
@@ -31,7 +31,7 @@ local backend = {
 }
 
 ---@param next_backend lib.debugx.backend
-g.set_backend = function(next_backend)
+M.set_backend = function(next_backend)
     assert(type(next_backend) == "table", "debugx backend must be a table")
     if next_backend.debug ~= nil then
         assert(type(next_backend.debug) == "function", "debugx backend.debug must be a function")
@@ -62,27 +62,27 @@ local function traceback_message(message)
     return debug.traceback(tostring(message), 3)
 end
 
-g.debug = function(...)
+M.debug = function(...)
     if backend.get_debug_mode() then
         return backend.debug(...)
     end
 end
 
-g.info = function(...)
+M.info = function(...)
     return backend.info(...)
 end
 
-g.warn = function(...)
+M.warn = function(...)
     return backend.warn(...)
 end
 
 ---@param msg any
-g.error = function(msg)
+M.error = function(msg)
     return backend.error(traceback_message(msg))
 end
 
 ---@return boolean
-g.get_debug_mode = function()
+M.get_debug_mode = function()
     return backend.get_debug_mode()
 end
 
@@ -138,17 +138,17 @@ end
 ---Functions, userdata, threads, and cyclic references are represented as strings.
 ---@param value any
 ---@return string text
-g.dump = function(value)
+M.dump = function(value)
     local parts = {}
     append_dump(parts, value, {})
     return table.concat(parts)
 end
 
 ---Runs `return <str>` and returns the result.
----This is intended for simple debug strings produced by `g.dump`; do not pass untrusted content.
+---This is intended for simple debug strings produced by `M.dump`; do not pass untrusted content.
 ---@param str string Lua expression string
 ---@return any value
-g.load = function(str)
+M.load = function(str)
     assert(type(str) == "string", "str must be string")
 
     local env = {}
@@ -191,10 +191,10 @@ end
 
 ---Recursively prints one or more values. Tables are expanded in stable key order.
 ---@param ... any
-g.print = function(...)
+M.print = function(...)
     for i = 1, select("#", ...) do
         print_value(select(i, ...), "", "", {})
     end
 end
 
-return g
+return M

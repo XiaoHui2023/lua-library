@@ -79,7 +79,7 @@ local function stable_sort(items, less)
     return sorted
 end
 
----@param tb? any[]
+---@param tb? any[] 参数说明
 ---@return lib.list
 local function create(tb)
     if tb == nil then
@@ -120,7 +120,7 @@ local function create(tb)
     end
 
     ---@param id integer
-    ---@return integer?
+    ---@return integer? 返回值
     local function find_rank_by_id(id)
         for rank, entry in ipairs(entries) do
             if entry.id == id then
@@ -131,7 +131,7 @@ local function create(tb)
     end
 
     ---@param value any
-    ---@return integer?
+    ---@return integer? 返回值
     local function find_rank_by_element(value)
         for rank, entry in ipairs(entries) do
             if entry.value == value then
@@ -142,7 +142,7 @@ local function create(tb)
     end
 
     ---@param rank integer
-    ---@return lib.list.entry?
+    ---@return lib.list.entry? 返回值
     local function get_entry_by_rank(rank)
         return entries[rank]
     end
@@ -260,7 +260,7 @@ local function create(tb)
     end
 
     ---@param rank integer
-    ---@return any?
+    ---@return any? 返回值
     function o.index(rank)
         assert_integer(rank, "rank")
         local entry = get_entry_by_rank(rank)
@@ -289,7 +289,7 @@ local function create(tb)
     end
 
     ---@param rank integer
-    ---@return any?
+    ---@return any? 返回值
     function o.pop(rank)
         assert_integer(rank, "rank")
         local entry = get_entry_by_rank(rank)
@@ -318,8 +318,8 @@ local function create(tb)
         return find_rank_by_element(value) ~= nil
     end
 
-    ---@return any?
-    ---@return integer?
+    ---@return any? 返回值
+    ---@return integer? 返回值
     function o.first()
         local entry = entries[1]
         if entry == nil then
@@ -328,8 +328,8 @@ local function create(tb)
         return entry.value, 1
     end
 
-    ---@return any?
-    ---@return integer?
+    ---@return any? 返回值
+    ---@return integer? 返回值
     function o.last()
         local n = count()
         local entry = entries[n]
@@ -340,8 +340,8 @@ local function create(tb)
     end
 
     ---@param value any
-    ---@return any?
-    ---@return integer?
+    ---@return any? 返回值
+    ---@return integer? 返回值
     function o.prev(value)
         local rank = find_rank_by_element(value)
         if rank == nil or rank <= 1 then
@@ -352,8 +352,8 @@ local function create(tb)
     end
 
     ---@param value any
-    ---@return any?
-    ---@return integer?
+    ---@return any? 返回值
+    ---@return integer? 返回值
     function o.next(value)
         local rank = find_rank_by_element(value)
         if rank == nil or rank >= count() then
@@ -363,8 +363,8 @@ local function create(tb)
         return entry.value, rank + 1
     end
 
-    ---@return any?
-    ---@return integer?
+    ---@return any? 返回值
+    ---@return integer? 返回值
     function o.pop_front()
         local value = o.pop(1)
         if value == nil then
@@ -373,8 +373,8 @@ local function create(tb)
         return value, 1
     end
 
-    ---@return any?
-    ---@return integer?
+    ---@return any? 返回值
+    ---@return integer? 返回值
     function o.pop_back()
         local rank = count()
         local value = o.pop(rank)
@@ -445,8 +445,8 @@ local function create(tb)
     end
 
     ---@param should_remove boolean
-    ---@return any?
-    ---@return integer?
+    ---@return any? 返回值
+    ---@return integer? 返回值
     local function random(should_remove)
         local n = count()
         if n == 0 then
@@ -462,20 +462,20 @@ local function create(tb)
         return value, rank
     end
 
-    ---@return any?
-    ---@return integer?
+    ---@return any? 返回值
+    ---@return integer? 返回值
     function o.get_random()
         return random(false)
     end
 
-    ---@return any?
-    ---@return integer?
+    ---@return any? 返回值
+    ---@return integer? 返回值
     function o.pop_random()
         return random(true)
     end
 
-    ---@param compare? fun(a:any,b:any):boolean?
-    ---@param reverse? boolean
+    ---@param compare? fun(a:any,b:any):boolean? 参数说明
+    ---@param reverse? boolean 参数说明
     ---@return lib.list
     ---@nodiscard
     function o.sort(compare, reverse)
@@ -581,7 +581,7 @@ local function create(tb)
         return result
     end
 
-    ---@param limit? integer
+    ---@param limit? integer 参数说明
     function o.shuffle(limit)
         if limit == nil then
             limit = count()
@@ -600,7 +600,7 @@ local function create(tb)
     end
 
     ---@param start integer
-    ---@param stop? integer
+    ---@param stop? integer 参数说明
     ---@return lib.list
     function o.slice(start, stop)
         if stop == nil then

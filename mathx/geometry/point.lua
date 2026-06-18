@@ -12,7 +12,7 @@ function geometry.distance(p1, p2)
     return math.sqrt((x1 - x2) ^ 2 + (y1 - y2) ^ 2)
 end
 
----@param point? lib.point
+---@param point? lib.point 参数说明
 ---@return lib.mathx.geometry.point
 function geometry.point(point)
     point = point or {}
@@ -24,8 +24,8 @@ function geometry.point(point)
     }
 
     ---Returns a new point moved by x and y.
-    ---@param x? number
-    ---@param y? number
+    ---@param x? number 参数说明
+    ---@param y? number 参数说明
     ---@return lib.mathx.geometry.point
     function o.move(x, y)
         x = x or 0
@@ -42,7 +42,7 @@ function geometry.point(point)
 
     ---Returns a new point from polar coordinates.
     ---@param distance number
-    ---@param angle? number angle in degrees
+    ---@param angle? number 参数说明
     ---@return lib.mathx.geometry.point
     function o.polar(distance, angle)
         angle = angle or math.random_angle()
@@ -65,7 +65,7 @@ function geometry.point(point)
 
     ---@param point lib.point
     ---@param angle number facing angle in degrees
-    ---@param range? number half angle range in degrees
+    ---@param range? number 参数说明
     ---@return boolean
     function o.is_facing(point, angle, range)
         range = range or 90
@@ -74,7 +74,7 @@ function geometry.point(point)
 
     ---@param point lib.point
     ---@param angle number facing angle in degrees
-    ---@param range? number half angle range in degrees
+    ---@param range? number 参数说明
     ---@return boolean
     function o.is_behind(point, angle, range)
         return o.is_facing(point, angle + 180, range)

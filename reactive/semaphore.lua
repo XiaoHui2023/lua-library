@@ -4,8 +4,20 @@ local track = require "reactive.track"
 
 local M = {}
 
----@param args? { name?: string }
----@return table
+---@class lib.reactive.semaphore
+---@field type "semaphore" 信号量类型标记
+---@field on_acquire table 获取监听器
+---@field on_release table 释放监听器
+---@field on_change table 变化监听器
+---@field count fun():integer 当前获取计数
+---@field is_acquired fun():boolean 是否已被获取
+---@field is_free fun():boolean 是否空闲
+---@field acquire fun():function 获取并返回释放函数
+---@field toggle_on_event fun(source_event:lib.reactive.event, should_acquire:function):lib.reactive.event 跟随事件切换获取状态
+---@field dispose fun() 销毁信号量
+
+---@param args? table 信号量配置
+---@return lib.reactive.semaphore
 function M.new(args)
     args = args or {}
 

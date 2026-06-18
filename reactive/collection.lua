@@ -5,8 +5,21 @@ local list = require "list"
 
 local M = {}
 
----@param args? { compare?: fun(a:any,b:any):boolean, prevent_duplicate?: boolean, item_checker?: fun(v:any):boolean, type_checker?: fun(v:any):boolean, reversed?: boolean, name?: string }
----@return table
+---@class lib.reactive.collection<T>
+---@field type "collection" 集合类型标记
+---@field on_add table 添加监听器
+---@field on_get table 读取监听器
+---@field on_change table 变化监听器
+---@field get fun():list 读取集合列表
+---@field add fun(item:any):function 添加元素并返回删除函数
+---@field clear fun() 清空集合
+---@field any fun():boolean 是否存在元素
+---@field empty fun():boolean 是否为空
+---@field count fun():integer 元素数量
+---@field dispose fun() 销毁集合
+
+---@param args? table 集合配置
+---@return lib.reactive.collection
 function M.new(args)
     args = args or {}
     local items = list()

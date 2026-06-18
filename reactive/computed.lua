@@ -100,7 +100,7 @@ function M.has_frame_jobs()
     return #frame_queue > 0
 end
 
----@param max_rounds? integer
+---@param max_rounds? integer 单次刷新允许的最大轮数
 function M.flush_frame(max_rounds)
     max_rounds = max_rounds or 100
     frame_flush_scheduled = false
@@ -124,8 +124,23 @@ function M.flush_frame(max_rounds)
     end
 end
 
----@param args { expr: fun():..., equals?: fun(...):boolean, auto?: boolean, flush?: "lazy"|"sync"|"frame", name?: string }
----@return table
+---@class lib.reactive.computed<T>
+---@field type "computed" 计算值类型标记
+---@field on_update table 更新监听器
+---@field on_change table 变化监听器
+---@field on_dirty table 变脏监听器
+---@field get fun():... 读取当前计算值
+---@field recompute fun():... 立即重新计算
+---@field recompute_if_dirty fun():... 变脏时重新计算
+---@field refresh fun():... 刷新计算值
+---@field auto_update fun():function 启用自动刷新并返回取消函数
+---@field compute fun(new_expr:function) 替换计算表达式
+---@field set fun(...:any) 固定计算值
+---@field wrap_compute fun(wrapper:function) 包装计算表达式
+---@field dispose fun() 销毁计算值
+
+---@param args table|function 计算配置或计算函数
+---@return lib.reactive.computed
 function M.new(args)
     if type(args) == "function" then
         args = { expr = args }

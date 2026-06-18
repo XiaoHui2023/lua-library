@@ -26,7 +26,7 @@ g.raw = {
 
 ---@class lib.mathx.backend
 ---@field random_float fun(min: number, max: number): number
----@field random_int? fun(min: integer, max: integer): integer
+---@field random_int? fun(min: 字段说明
 ---@field sin fun(angle: number): number
 ---@field asin fun(value: number): number
 ---@field cos fun(angle: number): number
@@ -146,8 +146,8 @@ local function point_y(point)
     return geometry.get_y(point)
 end
 
----@param min? number
----@param max? number
+---@param min? number 参数说明
+---@param max? number 参数说明
 ---@return number
 local function random(min, max)
     min, max = normalize_range(min, max, 0, 2 ^ 32)
@@ -155,16 +155,16 @@ local function random(min, max)
 end
 
 ---Returns a random real number. The min and max arguments may be reversed.
----@param min? number
----@param max? number
+---@param min? number 参数说明
+---@param max? number 参数说明
 ---@return number
 function g.random_real(min, max)
     return random(min, max)
 end
 
 ---Returns a random angle in degrees. Defaults to [-180, 180].
----@param min? number
----@param max? number
+---@param min? number 参数说明
+---@param max? number 参数说明
 ---@return number
 function g.random_angle(min, max)
     min, max = normalize_range(min, max, -180, 180)
@@ -341,7 +341,7 @@ end
 ---@param pt1 lib.point
 ---@param po2 lib.point
 ---@param pt2 lib.point
----@param error_range? number
+---@param error_range? number 参数说明
 ---@return integer
 function g.crossproduct_sign(po1, pt1, po2, pt2, error_range)
     local value = g.crossproduct(po1, pt1, po2, pt2)
@@ -354,9 +354,9 @@ function g.crossproduct_sign(po1, pt1, po2, pt2, error_range)
 end
 
 ---@param point_list lib.point[]
----@return lib.point?
----@return lib.point?
----@return lib.point?
+---@return lib.point? 返回值
+---@return lib.point? 返回值
+---@return lib.point? 返回值
 function g.get_polygon_turning_vector(point_list)
     local sign_o
     local sum = #point_list
@@ -403,7 +403,7 @@ end
 
 ---Truncates a number toward zero.
 ---@param s number
----@return integer?
+---@return integer? 返回值
 function g.int(s)
     if type(s) ~= "number" then
         return nil

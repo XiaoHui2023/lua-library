@@ -1,25 +1,25 @@
 ---@class lib.stringx.keymap.config
----@field name_to_code table<string, integer>?
----@field code_to_name table<integer, string>?
+---@field name_to_code table<string, 字段说明
+---@field code_to_name table<integer, 字段说明
 
 ---@class lib.stringx.text_width_profile
----@field lower_scale number?
----@field upper_scale number?
----@field digit_scale number?
----@field normal_scale number?
----@field two_byte_scale number?
----@field three_byte_scale number?
----@field four_byte_scale number?
----@field space_scale number?
----@field height_scale number?
+---@field lower_scale number? 字段说明
+---@field upper_scale number? 字段说明
+---@field digit_scale number? 字段说明
+---@field normal_scale number? 字段说明
+---@field two_byte_scale number? 字段说明
+---@field three_byte_scale number? 字段说明
+---@field four_byte_scale number? 字段说明
+---@field space_scale number? 字段说明
+---@field height_scale number? 字段说明
 
 ---@class lib.stringx.text_layout.config
----@field width_profile lib.stringx.text_width_profile?
----@field rich_text_matcher fun(text:string, index:integer):string?
+---@field width_profile lib.stringx.text_width_profile? 字段说明
+---@field rich_text_matcher fun(text:string, 字段说明
 
 ---@class lib.stringx.config
----@field keymap lib.stringx.keymap.config?
----@field text_layout lib.stringx.text_layout.config?
+---@field keymap lib.stringx.keymap.config? 字段说明
+---@field text_layout lib.stringx.text_layout.config? 字段说明
 
 ---@class lib.stringx : stringlib
 local g = string
@@ -27,7 +27,7 @@ local g = string
 local keymap = require "stringx.keymap"
 local text_layout = require "stringx.text_layout"
 
----@param config lib.stringx.config?
+---@param config lib.stringx.config? 参数说明
 function g.configure(config)
     assert(config == nil or type(config) == "table", "config must be a table or nil")
     config = config or {}
@@ -35,13 +35,13 @@ function g.configure(config)
     text_layout.configure(config.text_layout)
 end
 
----@param config lib.stringx.keymap.config?
+---@param config lib.stringx.keymap.config? 参数说明
 function g.configure_keymap(config)
     assert(config == nil or type(config) == "table", "keymap config must be a table or nil")
     keymap.configure(config)
 end
 
----@param config lib.stringx.text_layout.config?
+---@param config lib.stringx.text_layout.config? 参数说明
 function g.configure_text_layout(config)
     assert(config == nil or type(config) == "table", "text layout config must be a table or nil")
     text_layout.configure(config)
@@ -82,7 +82,7 @@ end
 
 ---Return UTF-8 byte length at index.
 ---@param inputstr string
----@param index? integer
+---@param index? integer 参数说明
 ---@return integer
 g.byte_length = function(inputstr, index)
     return text_layout.byte_length(inputstr, index)
@@ -144,7 +144,7 @@ end
 ---Wrap text and estimate rendered size.
 ---@param text string
 ---@param font_size number
----@param width_limit? number
+---@param width_limit? number 参数说明
 ---@return string
 ---@return number
 ---@return number
@@ -422,7 +422,7 @@ end
 ---Find plain text from the right.
 ---@param s string
 ---@param pt string
----@return integer?
+---@return integer? 返回值
 g.rfind = function(s, pt)
     assert(pt ~= "", "pt must be a non-empty string")
     local result
@@ -466,7 +466,7 @@ g.endswith = function(s, suffix)
 end
 
 ---@param text string
----@param render_fn fun(key:string):string?
+---@param render_fn fun(key:string):string? 参数说明
 ---@return string rendered
 g.render_placeholders = function(text, render_fn)
     local parts = {}

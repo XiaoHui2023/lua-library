@@ -4,7 +4,7 @@ local track = require "reactive.track"
 
 local M = {}
 
----@param args? { name?: string }
+---@param args? table 响应式基础对象配置
 ---@return table
 function M.new(args)
     args = args or {}

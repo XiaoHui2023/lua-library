@@ -11,6 +11,25 @@ local scope = require "reactive.scope"
 local collection = require "reactive.collection"
 local timer = require "reactive.timer"
 
+---@alias reactive.set<T> lib.reactive.ref<T>
+---@alias reactive.ref<T> lib.reactive.ref<T>
+---@alias reactive.event<T> lib.reactive.event<T>
+---@alias reactive.once_event<T> lib.reactive.event<T>
+---@alias reactive.computed<T> lib.reactive.computed<T>
+---@alias reactive.add<T> lib.reactive.collection<T>
+---@alias reactive.collection<T> lib.reactive.collection<T>
+---@alias reactive.semaphore lib.reactive.semaphore
+---@alias reactive.factory lib.reactive.factory
+---@alias lib.reactive.set<T> lib.reactive.ref<T>
+---@alias lib.reactive.add<T> lib.reactive.collection<T>
+---@alias hook.set<T> lib.reactive.ref<T>
+---@alias hook.event<T> lib.reactive.event<T>
+---@alias hook.once_event<T> lib.reactive.event<T>
+---@alias hook.computed<T> lib.reactive.computed<T>
+---@alias hook.add<T> lib.reactive.collection<T>
+---@alias hook.semaphore lib.reactive.semaphore
+---@alias hook.factory lib.reactive.factory
+
 ---@class lib.reactive
 local M = {
     event = event.new,

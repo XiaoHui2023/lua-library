@@ -22,7 +22,7 @@ local function dispose_item(item)
     end
 end
 
----@param args? { name?: string }
+---@param args? table 释放作用域配置
 ---@return table
 function M.new(args)
     args = args or {}

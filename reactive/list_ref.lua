@@ -19,7 +19,7 @@ local function index_of(items, value, equals)
     return nil
 end
 
----@param args? { value?: table, item_checker?: fun(v:any):boolean, prevent_duplicate?: boolean, compare?: fun(a:any,b:any):boolean, equals?: fun(a:any,b:any):boolean, name?: string }
+---@param args? table 列表引用配置
 ---@return table
 function M.new(args)
     args = args or {}

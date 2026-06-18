@@ -12,10 +12,10 @@
 ---@field _event lib.callback.event
 
 ---@class lib.callback
----@field event fun(args?: { mode?: string, replay?: boolean, name?: string }): lib.callback.event
----@field once_event fun(args?: { mode?: string, replay?: boolean, name?: string }): lib.callback.event
----@field api fun(args?: { name?: string, replay?: boolean, mode?: string }): lib.callback.api
----@field set_event_error_handler fun(handler?: fun(err:string, info:table))
+---@field event fun(args?: 字段说明
+---@field once_event fun(args?: 字段说明
+---@field api fun(args?: 字段说明
+---@field set_event_error_handler fun(handler?: 字段说明
 ---@field set_strict fun(enabled:boolean)
 ---@field is_strict fun():boolean
 
@@ -68,7 +68,7 @@ local function notify_error(err, info)
     strict = was_strict
 end
 
----@param args? { mode?: string, replay?: boolean, name?: string }
+---@param args? { 参数说明
 ---@return lib.callback.event
 local function new_event(args)
     args = args or {}
@@ -309,7 +309,7 @@ local function new_event(args)
     return o
 end
 
----@param args? table
+---@param args? table 参数说明
 ---@return lib.callback.event
 local function once_event(args)
     local copied = {}
@@ -380,7 +380,7 @@ local function copy_values(value)
 end
 
 ---@param api lib.callback.api
----@param values? table
+---@param values? table 参数说明
 ---@return lib.callback.instance
 local function new_instance(api, values)
     local copied = copy_values(values)
@@ -450,7 +450,7 @@ local M = {
     is_strict = is_strict,
 }
 
----@param args? { name?: string, replay?: boolean, mode?: string }
+---@param args? { 参数说明
 ---@return lib.callback.api
 function M.api(args)
     args = args or {}

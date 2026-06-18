@@ -1,5 +1,5 @@
 ---@class lib.requirex
-local g = {}
+local M = {}
 
 local root ---@type string?
 local requirex_source_suffix = "requirex/init.lua"
@@ -158,7 +158,7 @@ end
 
 ---Initialize the root directory used by relative require.
 ---@param postfix string Path of the caller file relative to the root directory.
-g.initial = function(postfix)
+M.initial = function(postfix)
     assert(type(postfix) == "string", "postfix must be string")
 
     local info = debug.getinfo(2, "S")
@@ -177,9 +177,9 @@ end
 
 ---Resolve a module path without loading it.
 ---@param path string Module path.
----@param level? integer Stack level used to locate the caller.
+---@param level? integer 参数说明
 ---@return string resolved Resolved module path.
-g.resolve = function(path, level)
+M.resolve = function(path, level)
     assert(type(path) == "string", "path must be string")
     return resolve_relative(path, level or 3)
 end
@@ -187,9 +187,9 @@ end
 ---Wrap require so paths starting with `.` are resolved from the caller file.
 ---When hot_reload is true, only the resolved target module is cleared.
 ---@param method fun(path: string): any Loader function, usually the original require.
----@param hot_reload? boolean Whether to clear package.loaded before each load.
+---@param hot_reload? boolean 参数说明
 ---@return fun(path: string): any require_fn Wrapped loader.
-g.reload = function(method, hot_reload)
+M.reload = function(method, hot_reload)
     assert(type(method) == "function", "method must be function")
 
     hot_reload = hot_reload or false
@@ -206,4 +206,4 @@ g.reload = function(method, hot_reload)
     end
 end
 
-return g
+return M

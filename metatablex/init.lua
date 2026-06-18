@@ -1,5 +1,5 @@
 ---@class lib.metatablex
-local g = {}
+local M = {}
 
 local debug_getmetatable = debug and debug.getmetatable
 
@@ -38,7 +38,7 @@ end
 ---@param t T 目标表
 ---@param metatable table 要合并到 metatable 的字段
 ---@return T t 目标表
-g.with_metatable = function(t, metatable)
+M.with_metatable = function(t, metatable)
     assert(type(t) == "table", "t must be table")
     assert(type(metatable) == "table", "metatable must be table")
 
@@ -60,7 +60,6 @@ local function call_newindex(newindex, self, key, value)
     end
 end
 
----锁定新增字段。
 ---
 ---不传 key 时，禁止通过普通赋值新增字段。
 ---传入 key 时，只禁止通过 __newindex 写入该 key。
@@ -68,16 +67,16 @@ end
 ---注意：Lua 的 __newindex 不能拦截已有字段的直接赋值，因此这个函数不是强只读。
 ---@generic T: table
 ---@param t T 目标表
----@param key? any 要锁定的新字段名；nil 表示禁止新增任意字段
+---@param key? any 参数说明
 ---@return T t 目标表
-g.lock_new_fields = function(t, key)
+M.lock_new_fields = function(t, key)
     assert(type(t) == "table", "t must be table")
 
     local mt = get_plain_metatable(t) or {}
     local newindex = mt.__newindex
 
     if key ~= nil then
-        return g.with_metatable(t, {
+        return M.with_metatable(t, {
             __newindex = function(self, k, v)
                 if k == key then
                     error("key:'" .. tostring(k) .. "' is locked", 2)
@@ -87,28 +86,26 @@ g.lock_new_fields = function(t, key)
         })
     end
 
-    return g.with_metatable(t, {
+    return M.with_metatable(t, {
         __newindex = function(_, k)
             error(string.format("%s is locked, cannot set new key '%s'", tostring(t), tostring(k)), 2)
         end
     })
 end
 
----兼容旧名。该函数只锁定新增字段，不会阻止修改已有字段。
 ---@generic T: table
 ---@param t T 目标表
----@param key? any 要锁定的新字段名；nil 表示禁止新增任意字段
+---@param key? any 参数说明
 ---@return T t 目标表
-g.readonly = g.lock_new_fields
+M.readonly = M.lock_new_fields
 
 ---创建强只读代理。
 ---
----返回的是新 proxy，不是原表；写入 proxy 会报错，读取会转发到原表。
 ---原表本身仍然可以被持有它的代码修改，因此这个函数适合对外暴露只读视图。
 ---@generic T: table
 ---@param t T 目标表
 ---@return T proxy 只读代理
-g.readonly_proxy = function(t)
+M.readonly_proxy = function(t)
     assert(type(t) == "table", "t must be table")
 
     local proxy = {}
@@ -140,10 +137,10 @@ end
 ---@param t T 目标表
 ---@param func fun(...): any 被调用的函数
 ---@return T t 目标表
-g.callable = function(t, func)
+M.callable = function(t, func)
     assert(type(t) == "table", "t must be table")
     assert(type(func) == "function", "func must be function")
-    return g.with_metatable(t, {
+    return M.with_metatable(t, {
         __call = function(_, ...)
             return func(...)
         end
@@ -155,10 +152,10 @@ end
 ---@param t T 目标表
 ---@param method fun(self: T, ...): any 被调用的方法
 ---@return T t 目标表
-g.callable_method = function(t, method)
+M.callable_method = function(t, method)
     assert(type(t) == "table", "t must be table")
     assert(type(method) == "function", "method must be function")
-    return g.with_metatable(t, {
+    return M.with_metatable(t, {
         __call = function(self, ...)
             return method(self, ...)
         end
@@ -170,10 +167,10 @@ end
 ---@param t T 目标表
 ---@param func fun(self: T): string 字符串生成函数
 ---@return T t 目标表
-g.with_tostring = function(t, func)
+M.with_tostring = function(t, func)
     assert(type(t) == "table", "t must be table")
     assert(type(func) == "function", "func must be function")
-    return g.with_metatable(t, {
+    return M.with_metatable(t, {
         __tostring = function(self)
             return func(self)
         end
@@ -187,9 +184,9 @@ end
 ---@param t T 目标表
 ---@param ... any 传给 string.format 的参数，第一个参数应为格式字符串
 ---@return T t 目标表
-g.with_tostring_format = function(t, ...)
+M.with_tostring_format = function(t, ...)
     local args = { ... }
-    return g.with_tostring(t, function()
+    return M.with_tostring(t, function()
         return string.format(table.unpack(args))
     end)
 end
@@ -199,9 +196,9 @@ end
 ---func 返回非 nil 时使用该返回值；返回 nil 时回退到原 __index 或 rawget。
 ---@generic T: table
 ---@param t T 目标表
----@param func fun(self: T, key: any): any? 代理查询函数
+---@param func fun(self: 参数说明
 ---@return T t 目标表
-g.index_proxy = function(t, func)
+M.index_proxy = function(t, func)
     assert(type(t) == "table", "t must be table")
     assert(type(func) == "function", "func must be function")
 
@@ -217,7 +214,7 @@ g.index_proxy = function(t, func)
         return rawget(self, key)
     end
 
-    return g.with_metatable(t, {
+    return M.with_metatable(t, {
         __index = function(self, key)
             local rt = func(self, key)
             if rt ~= nil then
@@ -228,4 +225,4 @@ g.index_proxy = function(t, func)
     })
 end
 
-return g
+return M

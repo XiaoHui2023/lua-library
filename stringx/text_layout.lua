@@ -1,17 +1,17 @@
 ---@class lib.stringx.text_width_profile
----@field lower_scale number?
----@field upper_scale number?
----@field digit_scale number?
----@field normal_scale number?
----@field two_byte_scale number?
----@field three_byte_scale number?
----@field four_byte_scale number?
----@field space_scale number?
----@field height_scale number?
+---@field lower_scale number? 字段说明
+---@field upper_scale number? 字段说明
+---@field digit_scale number? 字段说明
+---@field normal_scale number? 字段说明
+---@field two_byte_scale number? 字段说明
+---@field three_byte_scale number? 字段说明
+---@field four_byte_scale number? 字段说明
+---@field space_scale number? 字段说明
+---@field height_scale number? 字段说明
 
 ---@class lib.stringx.text_layout.config
----@field width_profile lib.stringx.text_width_profile?
----@field rich_text_matcher fun(text:string, index:integer):string?
+---@field width_profile lib.stringx.text_width_profile? 字段说明
+---@field rich_text_matcher fun(text:string, 字段说明
 
 ---@class lib.stringx.text_layout.data
 ---@field data string
@@ -39,10 +39,10 @@ local default_width_profile = {
 ---@type lib.stringx.text_width_profile
 local width_profile = {}
 
----@type fun(text:string, index:integer):string?
+---@type fun(text:string,
 local rich_text_matcher
 
----@return table?
+---@return table? 返回值
 local function get_color_lib()
     if not color_loaded then
         color_loaded = true
@@ -54,7 +54,7 @@ local function get_color_lib()
     return color_lib
 end
 
----@param profile lib.stringx.text_width_profile?
+---@param profile lib.stringx.text_width_profile? 参数说明
 local function apply_width_profile(profile)
     for key, value in pairs(default_width_profile) do
         width_profile[key] = value
@@ -73,7 +73,7 @@ end
 
 ---@param text string
 ---@param index integer
----@return string?
+---@return string? 返回值
 local function default_rich_text_matcher(text, index)
     local color = get_color_lib()
     if not color or type(color.PATTERNS) ~= "table" then
@@ -90,7 +90,7 @@ local function default_rich_text_matcher(text, index)
 end
 
 ---@param value any
----@return string?
+---@return string? 返回值
 local function normalize_text(value)
     if value == nil then
         return nil
@@ -104,7 +104,7 @@ local function normalize_text(value)
     return value
 end
 
----@param config lib.stringx.text_layout.config?
+---@param config lib.stringx.text_layout.config? 参数说明
 function M.configure(config)
     config = config or {}
     apply_width_profile(config.width_profile)
@@ -118,7 +118,7 @@ function M.configure(config)
 end
 
 ---@param inputstr any
----@param index? integer
+---@param index? integer 参数说明
 ---@return integer
 function M.byte_length(inputstr, index)
     local text = normalize_text(inputstr)
@@ -242,7 +242,7 @@ end
 
 ---@param text any
 ---@param font_size number
----@param width_limit? number
+---@param width_limit? number 参数说明
 ---@return string
 ---@return number
 ---@return number

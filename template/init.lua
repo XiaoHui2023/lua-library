@@ -16,8 +16,8 @@ local VALID_STAGES = {
 }
 
 ---@param value any
----@param validator? fun(value:any):boolean
----@param message? string
+---@param validator? fun(value:any):boolean 参数说明
+---@param message? string 参数说明
 ---@return table
 local function create_ref(value, validator, message)
     local ref = {}
@@ -60,7 +60,7 @@ local function stable_sort(items, less)
     return sorted
 end
 
----@param args? { compare?: fun(a:any,b:any):boolean, reversed?: boolean }
+---@param args? { 参数说明
 ---@return table
 local function create_collection(args)
     args = args or {}
@@ -179,7 +179,7 @@ end
 ---@class lib.template.placeholder_renderer.options
 ---@field stage lib.template.placeholder_renderer_stage
 ---@field on_render fun(context:table)
----@field priority? number
+---@field priority? number 字段说明
 
 ---@param args lib.template.placeholder_renderer.options
 ---@return lib.template.placeholder_renderer
@@ -219,9 +219,9 @@ function M.create_placeholder_renderer(args)
 end
 
 ---@class lib.template.renderer.options
----@field exposed_contexts? table[]
+---@field exposed_contexts? table[] 字段说明
 
----@param args? lib.template.renderer.options
+---@param args? lib.template.renderer.options 参数说明
 ---@return lib.template.renderer
 function M.create_template_renderer(args)
     assert(args == nil or type(args) == "table", "template renderer args must be table")
@@ -292,7 +292,7 @@ function M.create_template_renderer(args)
     end
 
     ---@param placeholder string
-    ---@return table?
+    ---@return table? 返回值
     local function search_exposed(placeholder)
         local entry
 
