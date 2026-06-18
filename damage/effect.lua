@@ -1,8 +1,8 @@
 ---@type lib.tablex
 local tablex = require "lib.tablex"
 ---@type lib.reactive
-local hook = require "lib.reactive"
-local modifier_util = require "lib.damage.modifier"
+local reactive = require "lib.reactive"
+local damage_modifier = require "lib.damage.modifier"
 
 local M = {}
 
@@ -19,7 +19,7 @@ function M.add(damage, options)
     assert(type(options) == "table", "effect options must be table")
     assert(type(options.modifiers) == "table", "effect modifiers must be table")
 
-    local effect_scope = hook.scope({ name = "damage_effect" })
+    local effect_scope = reactive.scope({ name = "damage_effect" })
     local owner = options.owner
     for phase_name, modifier_list in pairs(options.modifiers) do
         local phase = damage.phase_map[phase_name]
@@ -38,7 +38,7 @@ function M.add(damage, options)
         end
     end
 
-    local unbind_owner = modifier_util.bind_owner_delete(owner, effect_scope.dispose)
+    local unbind_owner = damage_modifier.bind_owner_delete(owner, effect_scope.dispose)
     effect_scope.add(unbind_owner)
 
     return function()

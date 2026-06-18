@@ -1,7 +1,7 @@
 ---@type lib.tablex
 local tablex = require "lib.tablex"
 ---@type lib.metatablex
-local metatable = require "lib.metatablex"
+local metatablex = require "lib.metatablex"
 ---@type lib.debugx
 local debugx = require "lib.debugx"
 
@@ -629,13 +629,13 @@ local function create(tb)
         o.append(value)
     end
 
-    metatable.index_proxy(o, function(_, key)
+    metatablex.index_proxy(o, function(_, key)
         if key == "count" then
             return count()
         end
     end)
 
-    metatable.with_tostring(o, function()
+    metatablex.with_tostring(o, function()
         local parts = {}
         o.for_each(function(value)
             parts[#parts + 1] = tostring(value)
@@ -643,7 +643,7 @@ local function create(tb)
         return string.format("[%s]", table.concat(parts, ", "))
     end)
 
-    metatable.lock_new_fields(o)
+    metatablex.lock_new_fields(o)
 
     return o
 end

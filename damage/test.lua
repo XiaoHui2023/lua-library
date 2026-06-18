@@ -1,5 +1,5 @@
 local damage = require "lib.damage"
-local hook = require "lib.reactive"
+local reactive = require "lib.reactive"
 
 local function assert_damage(result, damage)
     assert(result.damage == damage, string.format("expected damage %s, got %s", damage, result.damage))
@@ -42,7 +42,7 @@ do
 end
 
 do
-    local shield_item = hook.scope({ name = "shield_item" })
+    local shield_item = reactive.scope({ name = "shield_item" })
     damage.add_modifier("damage_immunity", {
         owner = shield_item,
         uses = 1,
@@ -62,7 +62,7 @@ do
 end
 
 do
-    local armor_item = hook.scope({ name = "armor_item" })
+    local armor_item = reactive.scope({ name = "armor_item" })
     damage.add_effect({
         owner = armor_item,
         modifiers = {
@@ -81,7 +81,7 @@ do
 end
 
 do
-    local amulet_item = hook.factory({ name = "amulet_item" })
+    local amulet_item = reactive.factory({ name = "amulet_item" })
     damage.add_modifier("source_flat", {
         owner = amulet_item,
         name = "amulet_bonus",

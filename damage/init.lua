@@ -1,7 +1,7 @@
 ---@type lib.metatablex
-local metatable = require "lib.metatablex"
+local metatablex = require "lib.metatablex"
 ---@type lib.reactive
-local hook = require "lib.reactive"
+local reactive = require "lib.reactive"
 local constants = require "lib.damage.constants"
 local create_phase = require "lib.damage.phase"
 local side = require "lib.damage.side"
@@ -84,7 +84,7 @@ M.modifier_phase = create_phase
 function M.create(args)
     ---@class lib.damage: lib.reactive.factory
     ---@operator call(lib.damage.context):lib.damage.result
-    local o = hook.factory(args)
+    local o = reactive.factory(args)
     o.set_class("lib.damage")
 
     o.prepare = create_phase(M.PHASE.PREPARE, "chain")
@@ -147,12 +147,12 @@ function M.create(args)
         return resolver.resolve(o, context)
     end
 
-    metatable.callable(o, o.run)
+    metatablex.callable(o, o.run)
     o.factory.register_hook_fields()
 
     return o
 end
 
-metatable.callable(M, M.create)
+metatablex.callable(M, M.create)
 
 return M

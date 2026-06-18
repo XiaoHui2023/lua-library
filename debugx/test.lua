@@ -41,7 +41,17 @@ assert(printed[4] == "  }", "print should close nested table")
 assert(printed[5] == "}", "print should close root table")
 
 local messages = {}
+local logs = {}
 debugx.set_backend({
+    debug = function(...)
+        logs[#logs + 1] = { level = "debug", value = table.concat({ ... }, "\t") }
+    end,
+    info = function(...)
+        logs[#logs + 1] = { level = "info", value = table.concat({ ... }, "\t") }
+    end,
+    warn = function(...)
+        logs[#logs + 1] = { level = "warn", value = table.concat({ ... }, "\t") }
+    end,
     error = function(msg)
         messages[#messages + 1] = msg
     end,
@@ -51,10 +61,25 @@ debugx.set_backend({
 })
 
 assert(debugx.get_debug_mode(), "get_debug_mode should use backend")
+debugx.debug("debug", 1)
+debugx.info("info", 2)
+debugx.warn("warn", 3)
+assert(#logs == 3, "log backends should be called")
+assert(logs[1].level == "debug" and logs[1].value == "debug\t1", "debug should forward varargs")
+assert(logs[2].level == "info" and logs[2].value == "info\t2", "info should forward varargs")
+assert(logs[3].level == "warn" and logs[3].value == "warn\t3", "warn should forward varargs")
 debugx.error("boom")
 assert(#messages == 1, "error backend should be called once")
 assert(messages[1]:find("boom", 1, true) ~= nil, "error should include message")
 assert(messages[1]:find("stack traceback", 1, true) ~= nil, "error should include traceback")
+
+debugx.set_backend({
+    get_debug_mode = function()
+        return false
+    end,
+})
+debugx.debug("hidden")
+assert(#logs == 3, "debug should be filtered when debug mode is disabled")
 
 local ok = pcall(debugx.set_backend, { error = "bad" })
 assert(not ok, "set_backend should reject invalid error backend")

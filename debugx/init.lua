@@ -5,11 +5,23 @@ local g = {}
 local tablex = require "lib.tablex"
 
 ---@class lib.debugx.backend
+---@field debug? fun(...)
+---@field info? fun(...)
+---@field warn? fun(...)
 ---@field error? fun(msg: string)
 ---@field get_debug_mode? fun(): boolean
 
 ---@type lib.debugx.backend
 local backend = {
+    debug = function(...)
+        print(...)
+    end,
+    info = function(...)
+        print(...)
+    end,
+    warn = function(...)
+        print(...)
+    end,
     error = function(msg)
         error(msg, 2)
     end,
@@ -21,6 +33,18 @@ local backend = {
 ---@param next_backend lib.debugx.backend
 g.set_backend = function(next_backend)
     assert(type(next_backend) == "table", "debugx backend must be a table")
+    if next_backend.debug ~= nil then
+        assert(type(next_backend.debug) == "function", "debugx backend.debug must be a function")
+        backend.debug = next_backend.debug
+    end
+    if next_backend.info ~= nil then
+        assert(type(next_backend.info) == "function", "debugx backend.info must be a function")
+        backend.info = next_backend.info
+    end
+    if next_backend.warn ~= nil then
+        assert(type(next_backend.warn) == "function", "debugx backend.warn must be a function")
+        backend.warn = next_backend.warn
+    end
     if next_backend.error ~= nil then
         assert(type(next_backend.error) == "function", "debugx backend.error must be a function")
         backend.error = next_backend.error
@@ -36,6 +60,20 @@ local function traceback_message(message)
         return tostring(message)
     end
     return debug.traceback(tostring(message), 3)
+end
+
+g.debug = function(...)
+    if backend.get_debug_mode() then
+        return backend.debug(...)
+    end
+end
+
+g.info = function(...)
+    return backend.info(...)
+end
+
+g.warn = function(...)
+    return backend.warn(...)
 end
 
 ---@param msg any
@@ -129,17 +167,17 @@ end
 
 local function print_value(value, prefix, indent, cache)
     if type(value) ~= "table" then
-        print(prefix .. primitive_to_string(value))
+        backend.debug(prefix .. primitive_to_string(value))
         return
     end
 
     if cache[value] then
-        print(prefix .. "*" .. tostring(value))
+        backend.debug(prefix .. "*" .. tostring(value))
         return
     end
 
     cache[value] = true
-    print(prefix .. tostring(value) .. " {")
+    backend.debug(prefix .. tostring(value) .. " {")
 
     local child_indent = indent .. "  "
     for key, item in tablex.sorted_pairs(value) do
@@ -147,7 +185,7 @@ local function print_value(value, prefix, indent, cache)
         print_value(item, child_indent .. "[" .. key_text .. "] => ", child_indent, cache)
     end
 
-    print(indent .. "}")
+    backend.debug(indent .. "}")
     cache[value] = nil
 end
 

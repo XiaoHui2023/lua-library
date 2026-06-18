@@ -1,7 +1,7 @@
 ---@type lib.metatablex
-local metatable = require "lib.metatablex"
+local metatablex = require "lib.metatablex"
 ---@type lib.reactive
-local hook = require "lib.reactive"
+local reactive = require "lib.reactive"
 ---@type fun(tb?: table): lib.list
 local list = require "lib.list"
 
@@ -16,9 +16,9 @@ M.PRIORITY = {
 }
 
 ---@type lib.reactive.add<lib.addon>
-local ADDONS = hook.collection({
+local ADDONS = reactive.collection({
     type_checker = function(element)
-        return hook.is_instance_of(element, "addon")
+        return reactive.is_instance_of(element, "addon")
     end,
     prevent_duplicate = true,
 })
@@ -26,7 +26,7 @@ local ADDONS = hook.collection({
 ---@param value any
 ---@return boolean
 local function is_addon(value)
-    return hook.is_instance_of(value, "addon")
+    return reactive.is_instance_of(value, "addon")
 end
 
 ---@param addon lib.addon
@@ -185,7 +185,7 @@ function M.register(args)
     args.priority = args.priority or M.PRIORITY.NORMAL
 
     ---@class lib.addon: lib.reactive.factory
-    local o = hook.factory(args)
+    local o = reactive.factory(args)
     o.set_class("addon")
 
     ---@type lib.addon[]
@@ -204,30 +204,30 @@ function M.register(args)
     end
 
     ---@type lib.reactive.set<integer>
-    o.priority = hook.ref(args.priority)
+    o.priority = reactive.ref(args.priority)
 
     ---@type lib.reactive.set<boolean>
-    o.is_enabled = hook.ref(args.is_enabled)
+    o.is_enabled = reactive.ref(args.is_enabled)
 
     ---@type lib.reactive.set<boolean>
-    o.is_visible = hook.ref(args.is_visible)
+    o.is_visible = reactive.ref(args.is_visible)
 
     ---@type lib.reactive.set<string>
-    o.description = hook.ref(args.description)
+    o.description = reactive.ref(args.description)
 
     ---@type lib.reactive.set<string>
-    o.category = hook.ref(args.category)
+    o.category = reactive.ref(args.category)
 
     ---@type lib.reactive.set<boolean>
-    o.is_unlocked = hook.ref(args.is_unlocked)
+    o.is_unlocked = reactive.ref(args.is_unlocked)
 
     ---@type lib.reactive.set<boolean>
-    o.has_initialized = hook.ref(false)
+    o.has_initialized = reactive.ref(false)
 
-    local on_activate = hook.event({ name = args.name .. ".activate" })
-    local once_deactivate = hook.once_event({ name = args.name .. ".deactivate_once" })
-    local on_initialize = hook.event({ name = args.name .. ".initialize" })
-    local on_deactivate = hook.event({ name = args.name .. ".deactivate" })
+    local on_activate = reactive.event({ name = args.name .. ".activate" })
+    local once_deactivate = reactive.once_event({ name = args.name .. ".deactivate_once" })
+    local on_initialize = reactive.event({ name = args.name .. ".initialize" })
+    local on_deactivate = reactive.event({ name = args.name .. ".deactivate" })
 
     ---@type lib.reactive.event
     o.on_activate = on_activate.as_listener()
@@ -242,7 +242,7 @@ function M.register(args)
     o.on_deactivate = on_deactivate.as_listener()
 
     ---@type lib.reactive.computed<boolean>
-    o.is_active = hook.computed(function()
+    o.is_active = reactive.computed(function()
         if not o.has_initialized() then
             return false
         end
@@ -297,14 +297,14 @@ function M.register(args)
     ---@return lib.reactive.computed
     function o.create_frame_update_computed(expr)
         ---@type lib.reactive.computed
-        local computed = hook.computed(expr)
+        local computed = reactive.computed(expr)
         computed.auto_update()
         return computed
     end
 
-    metatable.lock_new_fields(o.dependencies)
-    metatable.lock_new_fields(o.tags)
-    metatable.lock_new_fields(o.to_dependency)
+    metatablex.lock_new_fields(o.dependencies)
+    metatablex.lock_new_fields(o.tags)
+    metatablex.lock_new_fields(o.to_dependency)
 
     ---@type integer
     o.id = next_id
@@ -315,6 +315,6 @@ function M.register(args)
     return o
 end
 
-metatable.callable(M, M.register)
+metatablex.callable(M, M.register)
 
 return M
