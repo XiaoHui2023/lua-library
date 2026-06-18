@@ -177,7 +177,7 @@ end
 
 ---Resolve a module path without loading it.
 ---@param path string Module path.
----@param level? integer 参数说明
+---@param level? integer 调用栈层级；省略时按公开入口解析
 ---@return string resolved Resolved module path.
 M.resolve = function(path, level)
     assert(type(path) == "string", "path must be string")
@@ -187,7 +187,7 @@ end
 ---Wrap require so paths starting with `.` are resolved from the caller file.
 ---When hot_reload is true, only the resolved target module is cleared.
 ---@param method fun(path: string): any Loader function, usually the original require.
----@param hot_reload? boolean 参数说明
+---@param hot_reload? boolean 是否在加载前清理目标模块缓存
 ---@return fun(path: string): any require_fn Wrapped loader.
 M.reload = function(method, hot_reload)
     assert(type(method) == "function", "method must be function")

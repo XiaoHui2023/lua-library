@@ -67,7 +67,7 @@ end
 ---注意：Lua 的 __newindex 不能拦截已有字段的直接赋值，因此这个函数不是强只读。
 ---@generic T: table
 ---@param t T 目标表
----@param key? any 参数说明
+---@param key? any 指定锁定的字段；省略时禁止新增字段
 ---@return T t 目标表
 M.lock_new_fields = function(t, key)
     assert(type(t) == "table", "t must be table")
@@ -95,7 +95,7 @@ end
 
 ---@generic T: table
 ---@param t T 目标表
----@param key? any 参数说明
+---@param key? any 指定锁定的字段；省略时禁止新增字段
 ---@return T t 目标表
 M.readonly = M.lock_new_fields
 
@@ -193,10 +193,10 @@ end
 
 ---设置 __index 代理。
 ---
----func 返回非 nil 时使用该返回值；返回 nil 时回退到原 __index 或 rawget。
+---func 返回非 nil 时使用该结果；返回 nil 时回退到原 __index 或 rawget。
 ---@generic T: table
 ---@param t T 目标表
----@param func fun(self: 参数说明
+---@param func fun(self: T, key:any): any 索引代理函数
 ---@return T t 目标表
 M.index_proxy = function(t, func)
     assert(type(t) == "table", "t must be table")

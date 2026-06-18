@@ -16,8 +16,8 @@ local VALID_STAGES = {
 }
 
 ---@param value any
----@param validator? fun(value:any):boolean 参数说明
----@param message? string 参数说明
+---@param validator? fun(value:any):boolean 值校验函数；省略时不校验
+---@param message? string 校验失败时使用的错误信息
 ---@return table
 local function create_ref(value, validator, message)
     local ref = {}
@@ -60,7 +60,7 @@ local function stable_sort(items, less)
     return sorted
 end
 
----@param args? { 参数说明
+---@param args? { compare?: fun(a:any,b:any):boolean, reversed?: boolean } 集合配置
 ---@return table
 local function create_collection(args)
     args = args or {}
@@ -179,7 +179,7 @@ end
 ---@class lib.template.placeholder_renderer.options
 ---@field stage lib.template.placeholder_renderer_stage
 ---@field on_render fun(context:table)
----@field priority? number 字段说明
+---@field priority? number 渲染器排序优先级，数值越小越靠前
 
 ---@param args lib.template.placeholder_renderer.options
 ---@return lib.template.placeholder_renderer
@@ -219,9 +219,9 @@ function M.create_placeholder_renderer(args)
 end
 
 ---@class lib.template.renderer.options
----@field exposed_contexts? table[] 字段说明
+---@field exposed_contexts? table[] 可供占位符查找的外部上下文列表
 
----@param args? lib.template.renderer.options 参数说明
+---@param args? lib.template.renderer.options 模板渲染器配置
 ---@return lib.template.renderer
 function M.create_template_renderer(args)
     assert(args == nil or type(args) == "table", "template renderer args must be table")
@@ -292,7 +292,7 @@ function M.create_template_renderer(args)
     end
 
     ---@param placeholder string
-    ---@return table? 返回值
+    ---@return table? entry 找到时返回占位符条目
     local function search_exposed(placeholder)
         local entry
 

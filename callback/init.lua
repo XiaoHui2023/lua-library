@@ -12,10 +12,10 @@
 ---@field _event lib.callback.event
 
 ---@class lib.callback
----@field event fun(args?: 字段说明
----@field once_event fun(args?: 字段说明
----@field api fun(args?: 字段说明
----@field set_event_error_handler fun(handler?: 字段说明
+---@field event fun(args?:{name?:string, mode?:string, replay?:boolean}):lib.callback.event 创建普通事件
+---@field once_event fun(args?:{name?:string, replay?:boolean}):lib.callback.event 创建只触发一次的事件
+---@field api fun(args?:{name?:string, mode?:string, replay?:boolean}):lib.callback.api 创建回调 API 声明
+---@field set_event_error_handler fun(handler?:fun(err:string, info:table)) 设置事件异常处理函数
 ---@field set_strict fun(enabled:boolean)
 ---@field is_strict fun():boolean
 
@@ -68,7 +68,7 @@ local function notify_error(err, info)
     strict = was_strict
 end
 
----@param args? { 参数说明
+---@param args? { name?: string, mode?: string, replay?: boolean } 事件配置
 ---@return lib.callback.event
 local function new_event(args)
     args = args or {}
@@ -309,7 +309,7 @@ local function new_event(args)
     return o
 end
 
----@param args? table 参数说明
+---@param args? table 一次性事件配置
 ---@return lib.callback.event
 local function once_event(args)
     local copied = {}
@@ -380,7 +380,7 @@ local function copy_values(value)
 end
 
 ---@param api lib.callback.api
----@param values? table 参数说明
+---@param values? table 实例携带的字段值
 ---@return lib.callback.instance
 local function new_instance(api, values)
     local copied = copy_values(values)
@@ -450,7 +450,7 @@ local M = {
     is_strict = is_strict,
 }
 
----@param args? { 参数说明
+---@param args? { name?: string, mode?: string, replay?: boolean } 事件配置
 ---@return lib.callback.api
 function M.api(args)
     args = args or {}

@@ -8,9 +8,51 @@ local debugx = require "lib.debugx"
 local table = tablex
 
 ---@class lib.list.entry
----@field id integer
----@field value any
----@field alive boolean
+---@field id integer 元素唯一编号
+---@field value any 元素值
+---@field alive boolean 元素是否仍在列表中
+
+---@class lib.list.for_each.context
+---@field remove fun() 删除当前元素
+---@field set fun(element:any) 替换当前元素
+---@field stop fun():nil 停止后续遍历
+---@field index integer 当前元素在遍历快照中的序号
+
+---@class lib.list<T>
+---@field count integer 当前元素数量
+---@field clear fun() 清空列表
+---@field get_rank_by_id fun():table<integer, integer> 获取编号到序号的映射
+---@field get_element_by_id fun():table<integer, T> 获取编号到元素的映射
+---@field set_debug_mode fun(enable:boolean) 设置调试模式
+---@field get_debug_mode fun():boolean 获取调试模式是否启用
+---@field swap fun(rank_i:integer, rank_j:integer) 交换两个序号上的元素
+---@field index fun(rank:integer):T? 按序号读取元素
+---@field insert fun(rank:integer, value:T):fun():nil 按序号插入元素并返回删除函数
+---@field pop fun(rank:integer):T? 删除并返回指定序号的元素
+---@field remove fun(value:T):boolean 删除指定元素
+---@field contains fun(value:T):boolean 判断是否包含元素
+---@field first fun():T?, integer? 获取第一个元素及其序号
+---@field last fun():T?, integer? 获取最后一个元素及其序号
+---@field prev fun(value:T):T?, integer? 获取指定元素的前一个元素及其序号
+---@field next fun(value:T):T?, integer? 获取指定元素的后一个元素及其序号
+---@field pop_front fun():T?, integer? 删除并返回第一个元素及其序号
+---@field pop_back fun():T?, integer? 删除并返回最后一个元素及其序号
+---@field append fun(value:T):fun():nil 追加元素并返回删除函数
+---@field for_each fun(on_each:fun(element:T, context:lib.list.for_each.context)) 遍历元素快照
+---@field get_random fun():T?, integer? 随机读取元素及其序号
+---@field pop_random fun():T?, integer? 随机删除并返回元素及其序号
+---@field sort fun(compare?:fun(a:T,b:T):boolean?, reverse?:boolean):lib.list<T> 原地稳定排序
+---@field reverse fun():lib.list<T> 返回反序后的新列表
+---@field filter fun(predicate:fun(element:T):boolean):lib.list<T> 过滤元素并返回新列表
+---@field map fun(map_func:fun(element:T):any):lib.list<any> 映射元素并返回新列表
+---@field empty fun():boolean 判断列表是否为空
+---@field any fun():boolean 判断列表是否存在元素
+---@field to_table fun():T[] 导出数组
+---@field shuffle fun(limit?:integer) 随机打乱前若干个元素
+---@field slice fun(start:integer, stop?:integer):lib.list<T> 截取子列表
+---@field print fun() 打印列表内容
+
+---@alias list<T> lib.list<T>
 
 ---@param value any
 local function assert_element(value)
@@ -79,16 +121,16 @@ local function stable_sort(items, less)
     return sorted
 end
 
----@param tb? any[] 参数说明
----@return lib.list
+---@generic T
+---@param tb? T[] 初始数组；省略时创建空列表
+---@return lib.list<T>
 local function create(tb)
     if tb == nil then
         tb = {}
     end
     assert_array(tb)
 
-    ---@class lib.list
-    ---@field count integer
+    ---@type lib.list<T>
     local o = {}
 
     ---@type lib.list.entry[]
@@ -120,7 +162,7 @@ local function create(tb)
     end
 
     ---@param id integer
-    ---@return integer? 返回值
+    ---@return integer? rank 找到时返回元素序号
     local function find_rank_by_id(id)
         for rank, entry in ipairs(entries) do
             if entry.id == id then
@@ -131,7 +173,7 @@ local function create(tb)
     end
 
     ---@param value any
-    ---@return integer? 返回值
+    ---@return integer? rank 找到时返回元素序号
     local function find_rank_by_element(value)
         for rank, entry in ipairs(entries) do
             if entry.value == value then
@@ -142,7 +184,7 @@ local function create(tb)
     end
 
     ---@param rank integer
-    ---@return lib.list.entry? 返回值
+    ---@return lib.list.entry? entry 找到时返回内部条目
     local function get_entry_by_rank(rank)
         return entries[rank]
     end
@@ -260,7 +302,7 @@ local function create(tb)
     end
 
     ---@param rank integer
-    ---@return any? 返回值
+    ---@return T? value 找到时返回元素值
     function o.index(rank)
         assert_integer(rank, "rank")
         local entry = get_entry_by_rank(rank)
@@ -289,7 +331,7 @@ local function create(tb)
     end
 
     ---@param rank integer
-    ---@return any? 返回值
+    ---@return T? value 被删除的元素值
     function o.pop(rank)
         assert_integer(rank, "rank")
         local entry = get_entry_by_rank(rank)
@@ -318,8 +360,8 @@ local function create(tb)
         return find_rank_by_element(value) ~= nil
     end
 
-    ---@return any? 返回值
-    ---@return integer? 返回值
+    ---@return T? value 第一个元素值
+    ---@return integer? rank 第一个元素序号
     function o.first()
         local entry = entries[1]
         if entry == nil then
@@ -328,8 +370,8 @@ local function create(tb)
         return entry.value, 1
     end
 
-    ---@return any? 返回值
-    ---@return integer? 返回值
+    ---@return T? value 最后一个元素值
+    ---@return integer? rank 最后一个元素序号
     function o.last()
         local n = count()
         local entry = entries[n]
@@ -340,8 +382,8 @@ local function create(tb)
     end
 
     ---@param value any
-    ---@return any? 返回值
-    ---@return integer? 返回值
+    ---@return T? value 前一个元素值
+    ---@return integer? rank 前一个元素序号
     function o.prev(value)
         local rank = find_rank_by_element(value)
         if rank == nil or rank <= 1 then
@@ -352,8 +394,8 @@ local function create(tb)
     end
 
     ---@param value any
-    ---@return any? 返回值
-    ---@return integer? 返回值
+    ---@return T? value 后一个元素值
+    ---@return integer? rank 后一个元素序号
     function o.next(value)
         local rank = find_rank_by_element(value)
         if rank == nil or rank >= count() then
@@ -363,8 +405,8 @@ local function create(tb)
         return entry.value, rank + 1
     end
 
-    ---@return any? 返回值
-    ---@return integer? 返回值
+    ---@return T? value 第一个元素值
+    ---@return integer? rank 第一个元素序号
     function o.pop_front()
         local value = o.pop(1)
         if value == nil then
@@ -373,8 +415,8 @@ local function create(tb)
         return value, 1
     end
 
-    ---@return any? 返回值
-    ---@return integer? 返回值
+    ---@return T? value 最后一个元素值
+    ---@return integer? rank 最后一个元素序号
     function o.pop_back()
         local rank = count()
         local value = o.pop(rank)
@@ -409,11 +451,7 @@ local function create(tb)
             if entry ~= nil and entry.alive then
                 local removed = false
 
-                ---@class lib.list.for_each.context
-                ---@field remove fun()
-                ---@field set fun(element:any)
-                ---@field stop fun():nil
-                ---@field index integer
+                ---@type lib.list.for_each.context
                 local ctx = {
                     remove = function()
                         if removed then
@@ -445,8 +483,8 @@ local function create(tb)
     end
 
     ---@param should_remove boolean
-    ---@return any? 返回值
-    ---@return integer? 返回值
+    ---@return T? value 随机选中的元素值
+    ---@return integer? rank 随机选中的元素序号
     local function random(should_remove)
         local n = count()
         if n == 0 then
@@ -462,21 +500,21 @@ local function create(tb)
         return value, rank
     end
 
-    ---@return any? 返回值
-    ---@return integer? 返回值
+    ---@return T? value 随机选中的元素值
+    ---@return integer? rank 随机选中的元素序号
     function o.get_random()
         return random(false)
     end
 
-    ---@return any? 返回值
-    ---@return integer? 返回值
+    ---@return T? value 随机删除的元素值
+    ---@return integer? rank 随机删除的元素序号
     function o.pop_random()
         return random(true)
     end
 
-    ---@param compare? fun(a:any,b:any):boolean? 参数说明
-    ---@param reverse? boolean 参数说明
-    ---@return lib.list
+    ---@param compare? fun(a:T,b:T):boolean? 比较函数；返回 true 表示 a 排在 b 前面
+    ---@param reverse? boolean 是否反向排序
+    ---@return lib.list<T>
     ---@nodiscard
     function o.sort(compare, reverse)
         assert_optional_function(compare, "compare")
@@ -525,7 +563,7 @@ local function create(tb)
         return o
     end
 
-    ---@return lib.list
+    ---@return lib.list<T>
     function o.reverse()
         local values = {}
         for rank = count(), 1, -1 do
@@ -535,7 +573,7 @@ local function create(tb)
     end
 
     ---@param predicate fun(element:any):boolean
-    ---@return lib.list
+    ---@return lib.list<T>
     function o.filter(predicate)
         assert_function(predicate, "predicate")
 
@@ -549,7 +587,7 @@ local function create(tb)
     end
 
     ---@param map_func fun(element:any):any
-    ---@return lib.list
+    ---@return lib.list<any>
     function o.map(map_func)
         assert_function(map_func, "map_func")
 
@@ -581,7 +619,7 @@ local function create(tb)
         return result
     end
 
-    ---@param limit? integer 参数说明
+    ---@param limit? integer 只打乱前 limit 个元素；省略时打乱整个列表
     function o.shuffle(limit)
         if limit == nil then
             limit = count()
@@ -600,8 +638,8 @@ local function create(tb)
     end
 
     ---@param start integer
-    ---@param stop? integer 参数说明
-    ---@return lib.list
+    ---@param stop? integer 结束序号；省略时截取到列表末尾
+    ---@return lib.list<T>
     function o.slice(start, stop)
         if stop == nil then
             stop = count()

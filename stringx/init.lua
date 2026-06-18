@@ -1,25 +1,25 @@
 ---@class lib.stringx.keymap.config
----@field name_to_code table<string, 字段说明
----@field code_to_name table<integer, 字段说明
+---@field name_to_code table<string, integer> 按键名称到键码的映射
+---@field code_to_name table<integer, string> 键码到显示名称的映射
 
 ---@class lib.stringx.text_width_profile
----@field lower_scale number? 字段说明
----@field upper_scale number? 字段说明
----@field digit_scale number? 字段说明
----@field normal_scale number? 字段说明
----@field two_byte_scale number? 字段说明
----@field three_byte_scale number? 字段说明
----@field four_byte_scale number? 字段说明
----@field space_scale number? 字段说明
----@field height_scale number? 字段说明
+---@field lower_scale number? 小写字母宽度系数
+---@field upper_scale number? 大写字母宽度系数
+---@field digit_scale number? 数字宽度系数
+---@field normal_scale number? 单字节普通字符宽度系数
+---@field two_byte_scale number? 两字节字符宽度系数
+---@field three_byte_scale number? 三字节字符宽度系数
+---@field four_byte_scale number? 四字节字符宽度系数
+---@field space_scale number? 空格宽度系数
+---@field height_scale number? 行高系数
 
 ---@class lib.stringx.text_layout.config
----@field width_profile lib.stringx.text_width_profile? 字段说明
----@field rich_text_matcher fun(text:string, 字段说明
+---@field width_profile lib.stringx.text_width_profile? 文本宽度估算参数
+---@field rich_text_matcher fun(text:string, index:integer):string? 富文本片段匹配函数
 
 ---@class lib.stringx.config
----@field keymap lib.stringx.keymap.config? 字段说明
----@field text_layout lib.stringx.text_layout.config? 字段说明
+---@field keymap lib.stringx.keymap.config? 按键映射配置
+---@field text_layout lib.stringx.text_layout.config? 文本布局配置
 
 ---@class lib.stringx : stringlib
 local g = string
@@ -27,7 +27,7 @@ local g = string
 local keymap = require "stringx.keymap"
 local text_layout = require "stringx.text_layout"
 
----@param config lib.stringx.config? 参数说明
+---@param config lib.stringx.config? 字符串库配置
 function g.configure(config)
     assert(config == nil or type(config) == "table", "config must be a table or nil")
     config = config or {}
@@ -35,13 +35,13 @@ function g.configure(config)
     text_layout.configure(config.text_layout)
 end
 
----@param config lib.stringx.keymap.config? 参数说明
+---@param config lib.stringx.keymap.config? 按键映射配置
 function g.configure_keymap(config)
     assert(config == nil or type(config) == "table", "keymap config must be a table or nil")
     keymap.configure(config)
 end
 
----@param config lib.stringx.text_layout.config? 参数说明
+---@param config lib.stringx.text_layout.config? 文本布局配置
 function g.configure_text_layout(config)
     assert(config == nil or type(config) == "table", "text layout config must be a table or nil")
     text_layout.configure(config)
@@ -82,7 +82,7 @@ end
 
 ---Return UTF-8 byte length at index.
 ---@param inputstr string
----@param index? integer 参数说明
+---@param index? integer 字节起始位置；省略时从 1 开始
 ---@return integer
 g.byte_length = function(inputstr, index)
     return text_layout.byte_length(inputstr, index)
@@ -144,7 +144,7 @@ end
 ---Wrap text and estimate rendered size.
 ---@param text string
 ---@param font_size number
----@param width_limit? number 参数说明
+---@param width_limit? number 换行宽度上限；省略时不限制
 ---@return string
 ---@return number
 ---@return number
@@ -422,7 +422,7 @@ end
 ---Find plain text from the right.
 ---@param s string
 ---@param pt string
----@return integer? 返回值
+---@return integer? index 找到时返回最后一次出现的位置
 g.rfind = function(s, pt)
     assert(pt ~= "", "pt must be a non-empty string")
     local result
@@ -466,7 +466,7 @@ g.endswith = function(s, suffix)
 end
 
 ---@param text string
----@param render_fn fun(key:string):string? 参数说明
+---@param render_fn fun(key:string):string? 占位符渲染函数，返回 nil 时保留原文
 ---@return string rendered
 g.render_placeholders = function(text, render_fn)
     local parts = {}

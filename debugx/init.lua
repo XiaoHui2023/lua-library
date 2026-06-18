@@ -5,11 +5,11 @@ local M = {}
 local tablex = require "lib.tablex"
 
 ---@class lib.debugx.backend
----@field debug? fun(...) 字段说明
----@field info? fun(...) 字段说明
----@field warn? fun(...) 字段说明
----@field error? fun(msg: 字段说明
----@field get_debug_mode? fun(): 字段说明
+---@field debug? fun(...) 调试级日志输出函数
+---@field info? fun(...) 普通信息输出函数
+---@field warn? fun(...) 警告输出函数
+---@field error? fun(msg:any) 错误输出函数
+---@field get_debug_mode? fun():boolean 读取调试模式是否启用
 
 ---@type lib.debugx.backend
 local backend = {

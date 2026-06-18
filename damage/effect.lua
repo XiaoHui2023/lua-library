@@ -7,9 +7,9 @@ local damage_modifier = require "lib.damage.modifier"
 local M = {}
 
 ---@class lib.damage.effect_options
----@field owner? any 字段说明
----@field source? any 字段说明
----@field target? any 字段说明
+---@field owner? any 效果拥有者，用于跟随拥有者释放
+---@field source? any 默认伤害来源
+---@field target? any 默认伤害目标
 ---@field modifiers table<string, lib.damage.modifier|lib.damage.modifier[]>
 
 ---@param damage lib.damage

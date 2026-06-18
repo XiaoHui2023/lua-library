@@ -12,7 +12,7 @@
 ---@field to_hex fun(co: lib.color): string
 ---@field distance fun(a: lib.color, b: lib.color): number
 ---@field hue fun(co: lib.color): number
----@field nearest fun(co: 字段说明
+---@field nearest fun(co: lib.color, map?: lib.color[]): lib.color 查找色板中距离最近的颜色
 ---@field random fun(): lib.color
 ---@field get_map fun(): lib.color[]
 ---@field remove fun(text: string): string, integer
@@ -241,7 +241,7 @@ M.random = function()
 end
 
 ---@param co lib.color
----@param map? lib.color[] 参数说明
+---@param map? lib.color[] 候选颜色列表；省略时使用默认色板
 ---@return lib.color
 M.nearest = function(co, map)
     assert_color(co, "co")

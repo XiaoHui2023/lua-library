@@ -23,14 +23,14 @@ M.modifier_phase = create_phase
 ---| "max"
 
 ---@class lib.damage.context
----@field damage? number 字段说明
----@field base_damage? number 字段说明
----@field source? any 字段说明
----@field target? any 字段说明
----@field has_control? boolean 字段说明
----@field has_cc? boolean 字段说明
----@field tags? table<string, 字段说明
----@field data? table 字段说明
+---@field damage? number 当前伤害值；省略时使用 base_damage 或 0
+---@field base_damage? number 初始基础伤害；省略时使用 damage
+---@field source? any 伤害来源对象
+---@field target? any 伤害目标对象
+---@field has_control? boolean 是否附带控制效果
+---@field has_cc? boolean has_control 的兼容别名
+---@field tags? table<string, boolean> 伤害标签集合
+---@field data? table 调用方附加数据
 
 ---@class lib.damage.state
 ---@field context lib.damage.context
@@ -43,9 +43,9 @@ M.modifier_phase = create_phase
 ---@field has_damage boolean
 ---@field has_control boolean
 ---@field stopped boolean
----@field stop_reason? string 字段说明
----@field source? any 字段说明
----@field target? any 字段说明
+---@field stop_reason? string 停止结算的原因
+---@field source? any 伤害来源对象
+---@field target? any 伤害目标对象
 ---@field applied_modifiers lib.damage.applied_modifier[]
 
 ---@class lib.damage.result
@@ -56,22 +56,22 @@ M.modifier_phase = create_phase
 ---@field has_control boolean
 ---@field damage_immune boolean
 ---@field control_immune boolean
----@field source? any 字段说明
----@field target? any 字段说明
+---@field source? any 伤害来源对象
+---@field target? any 伤害目标对象
 ---@field context lib.damage.context
 ---@field applied_modifiers lib.damage.applied_modifier[]
 
 ---@class lib.damage.modifier
----@field callback fun(state:lib.damage.state,value?:any,modifier?:lib.damage.modifier):any? 字段说明
----@field condition? fun(state:lib.damage.state,modifier:lib.damage.modifier):boolean 字段说明
----@field priority? number 字段说明
----@field enabled? boolean 字段说明
----@field owner? any 字段说明
----@field source? any 字段说明
----@field name? string 字段说明
----@field uses? integer 字段说明
----@field remove_after_use? boolean 字段说明
----@field delete? fun() 字段说明
+---@field callback fun(state:lib.damage.state,value?:any,modifier?:lib.damage.modifier):any? 修正器执行函数
+---@field condition? fun(state:lib.damage.state,modifier:lib.damage.modifier):boolean 修正器生效条件
+---@field priority? number 修正器排序优先级
+---@field enabled? boolean 修正器是否启用
+---@field owner? any 修正器拥有者
+---@field source? any 伤害来源对象
+---@field name? string 修正器名称
+---@field uses? integer 剩余可用次数
+---@field remove_after_use? boolean 使用后是否自动移除
+---@field delete? fun() 移除该修正器的函数
 
 ---@class lib.damage.applied_modifier
 ---@field phase string
@@ -79,7 +79,7 @@ M.modifier_phase = create_phase
 ---@field before any
 ---@field after any
 
----@param args? lib.reactive.factory.options 参数说明
+---@param args? lib.reactive.factory.options 伤害工厂配置
 ---@return lib.damage
 function M.create(args)
     ---@class lib.damage: lib.reactive.factory
@@ -141,7 +141,7 @@ function M.create(args)
         return effect.add(o, options)
     end
 
-    ---@param context? lib.damage.context 参数说明
+    ---@param context? lib.damage.context 单次伤害结算上下文
     ---@return lib.damage.result
     function o.run(context)
         return resolver.resolve(o, context)

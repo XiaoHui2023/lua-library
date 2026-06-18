@@ -26,7 +26,7 @@ g.raw = {
 
 ---@class lib.mathx.backend
 ---@field random_float fun(min: number, max: number): number
----@field random_int? fun(min: 字段说明
+---@field random_int? fun(min: integer, max: integer): integer 可选随机整数后端
 ---@field sin fun(angle: number): number
 ---@field asin fun(value: number): number
 ---@field cos fun(angle: number): number
@@ -146,8 +146,8 @@ local function point_y(point)
     return geometry.get_y(point)
 end
 
----@param min? number 参数说明
----@param max? number 参数说明
+---@param min? number 随机范围下限；只传一个值时表示上限
+---@param max? number 随机范围上限；可小于下限
 ---@return number
 local function random(min, max)
     min, max = normalize_range(min, max, 0, 2 ^ 32)
@@ -155,16 +155,16 @@ local function random(min, max)
 end
 
 ---Returns a random real number. The min and max arguments may be reversed.
----@param min? number 参数说明
----@param max? number 参数说明
+---@param min? number 随机范围下限；只传一个值时表示上限
+---@param max? number 随机范围上限；可小于下限
 ---@return number
 function g.random_real(min, max)
     return random(min, max)
 end
 
 ---Returns a random angle in degrees. Defaults to [-180, 180].
----@param min? number 参数说明
----@param max? number 参数说明
+---@param min? number 随机范围下限；只传一个值时表示上限
+---@param max? number 随机范围上限；可小于下限
 ---@return number
 function g.random_angle(min, max)
     min, max = normalize_range(min, max, -180, 180)
@@ -341,7 +341,7 @@ end
 ---@param pt1 lib.point
 ---@param po2 lib.point
 ---@param pt2 lib.point
----@param error_range? number 参数说明
+---@param error_range? number 叉积接近 0 时视为共线的误差范围
 ---@return integer
 function g.crossproduct_sign(po1, pt1, po2, pt2, error_range)
     local value = g.crossproduct(po1, pt1, po2, pt2)
@@ -354,9 +354,9 @@ function g.crossproduct_sign(po1, pt1, po2, pt2, error_range)
 end
 
 ---@param point_list lib.point[]
----@return lib.point? 返回值
----@return lib.point? 返回值
----@return lib.point? 返回值
+---@return lib.point? first 转向发生前的点
+---@return lib.point? middle 转向顶点
+---@return lib.point? last 转向发生后的点
 function g.get_polygon_turning_vector(point_list)
     local sign_o
     local sum = #point_list
@@ -403,7 +403,7 @@ end
 
 ---Truncates a number toward zero.
 ---@param s number
----@return integer? 返回值
+---@return integer? value 转换后的整数；非数字输入返回 nil
 function g.int(s)
     if type(s) ~= "number" then
         return nil

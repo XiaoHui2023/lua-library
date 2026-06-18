@@ -1,17 +1,17 @@
 ---@class lib.stringx.text_width_profile
----@field lower_scale number? 字段说明
----@field upper_scale number? 字段说明
----@field digit_scale number? 字段说明
----@field normal_scale number? 字段说明
----@field two_byte_scale number? 字段说明
----@field three_byte_scale number? 字段说明
----@field four_byte_scale number? 字段说明
----@field space_scale number? 字段说明
----@field height_scale number? 字段说明
+---@field lower_scale number? 小写字母宽度系数
+---@field upper_scale number? 大写字母宽度系数
+---@field digit_scale number? 数字宽度系数
+---@field normal_scale number? 单字节普通字符宽度系数
+---@field two_byte_scale number? 两字节字符宽度系数
+---@field three_byte_scale number? 三字节字符宽度系数
+---@field four_byte_scale number? 四字节字符宽度系数
+---@field space_scale number? 空格宽度系数
+---@field height_scale number? 行高系数
 
 ---@class lib.stringx.text_layout.config
----@field width_profile lib.stringx.text_width_profile? 字段说明
----@field rich_text_matcher fun(text:string, 字段说明
+---@field width_profile lib.stringx.text_width_profile? 文本宽度估算参数
+---@field rich_text_matcher fun(text:string, index:integer):string? 富文本片段匹配函数
 
 ---@class lib.stringx.text_layout.data
 ---@field data string
@@ -39,10 +39,10 @@ local default_width_profile = {
 ---@type lib.stringx.text_width_profile
 local width_profile = {}
 
----@type fun(text:string,
+---@type fun(text:string, index:integer):string?
 local rich_text_matcher
 
----@return table? 返回值
+---@return table? color 颜色库加载成功时返回模块表
 local function get_color_lib()
     if not color_loaded then
         color_loaded = true
@@ -54,7 +54,7 @@ local function get_color_lib()
     return color_lib
 end
 
----@param profile lib.stringx.text_width_profile? 参数说明
+---@param profile lib.stringx.text_width_profile? 文本宽度估算参数；省略时使用默认值
 local function apply_width_profile(profile)
     for key, value in pairs(default_width_profile) do
         width_profile[key] = value
@@ -73,7 +73,7 @@ end
 
 ---@param text string
 ---@param index integer
----@return string? 返回值
+---@return string? text 匹配到的富文本片段或规范化后的字符串
 local function default_rich_text_matcher(text, index)
     local color = get_color_lib()
     if not color or type(color.PATTERNS) ~= "table" then
@@ -90,7 +90,7 @@ local function default_rich_text_matcher(text, index)
 end
 
 ---@param value any
----@return string? 返回值
+---@return string? text 匹配到的富文本片段或规范化后的字符串
 local function normalize_text(value)
     if value == nil then
         return nil
@@ -104,7 +104,7 @@ local function normalize_text(value)
     return value
 end
 
----@param config lib.stringx.text_layout.config? 参数说明
+---@param config lib.stringx.text_layout.config? 文本布局配置；省略时使用默认值
 function M.configure(config)
     config = config or {}
     apply_width_profile(config.width_profile)
@@ -118,7 +118,7 @@ function M.configure(config)
 end
 
 ---@param inputstr any
----@param index? integer 参数说明
+---@param index? integer 字节起始位置；省略时从 1 开始
 ---@return integer
 function M.byte_length(inputstr, index)
     local text = normalize_text(inputstr)
@@ -242,7 +242,7 @@ end
 
 ---@param text any
 ---@param font_size number
----@param width_limit? number 参数说明
+---@param width_limit? number 换行宽度上限；省略时不限制
 ---@return string
 ---@return number
 ---@return number

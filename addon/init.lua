@@ -2,7 +2,7 @@
 local metatablex = require "lib.metatablex"
 ---@type lib.reactive
 local reactive = require "lib.reactive"
----@type fun(tb?:
+---@type fun(tb?: any[]): lib.list<any>
 local list = require "lib.list"
 
 ---@class lib.addon
@@ -154,14 +154,14 @@ local next_id = 1
 
 ---@class lib.addon.options : lib.reactive.factory.options
 ---@field name string
----@field description? string 字段说明
----@field dependencies? lib.addon[] 字段说明
----@field tags? string[] 字段说明
----@field category? string 字段说明
----@field is_enabled? boolean 字段说明
----@field is_unlocked? boolean 字段说明
----@field is_visible? boolean 字段说明
----@field priority? integer 字段说明
+---@field description? string 插件说明文本
+---@field dependencies? lib.addon[] 当前插件依赖的其它插件
+---@field tags? string[] 插件标签列表
+---@field category? string 插件分类名
+---@field is_enabled? boolean 初始启用状态，省略时启用
+---@field is_unlocked? boolean 初始解锁状态，省略时解锁
+---@field is_visible? boolean 初始可见状态，省略时隐藏
+---@field priority? integer 初始化排序优先级，数值越小越靠前
 
 ---@param args lib.addon.options
 ---@return lib.addon

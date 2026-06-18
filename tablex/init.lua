@@ -116,7 +116,7 @@ end
 ---@generic K, V
 ---按稳定顺序遍历 table。
 ---@param t table<K, V> 待遍历的表
----@return fun(): 返回值
+---@return fun():K, V 按排序键遍历的迭代器
 M.sorted_pairs = function(t)
     assert_table(t, "sorted_pairs argument")
 
@@ -146,7 +146,7 @@ M.is_empty = function(t)
 end
 
 ---@param t table 待统计的表
----@return integer 返回值
+---@return integer count 表内键值对数量
 M.count = function(t)
     assert_table(t, "count argument")
     local n = 0
@@ -158,7 +158,7 @@ end
 
 ---@generic K
 ---@param t table<K, any> 待读取的表
----@return K[] 返回值
+---@return K[] keys 排序后的键列表
 M.keys = function(t)
     local result = {}
     for key in M.sorted_pairs(t) do
@@ -195,8 +195,8 @@ end
 ---@generic K, V
 ---@param t table<K, V> 待查找的表
 ---@param predicate fun(value: V, key: K): boolean 判断函数
----@return V? 返回值
----@return K? 返回值
+---@return V? value 找到的值
+---@return K? key 找到的键
 M.find = function(t, predicate)
     for key, value in M.sorted_pairs(t) do
         if predicate(value, key) then
