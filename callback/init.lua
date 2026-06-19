@@ -1,30 +1,30 @@
 ---@class lib.callback.event
----@field type string
----@field mode string
+---@field type string 回调对象类型标记
+---@field mode string 事件触发模式
 
 ---@class lib.callback.instance
----@field api lib.callback.api
----@field values table
+---@field api lib.callback.api 所属回调 API
+---@field values table 实例携带的字段值
 
 ---@class lib.callback.api
----@field type string
----@field name string
----@field _event lib.callback.event
+---@field type string 回调对象类型标记
+---@field name string API 名称
+---@field _event lib.callback.event API 内部事件
 
 ---@class lib.callback
 ---@field event fun(args?:{name?:string, mode?:string, replay?:boolean}):lib.callback.event 创建普通事件
 ---@field once_event fun(args?:{name?:string, replay?:boolean}):lib.callback.event 创建只触发一次的事件
 ---@field api fun(args?:{name?:string, mode?:string, replay?:boolean}):lib.callback.api 创建回调 API 声明
 ---@field set_event_error_handler fun(handler?:fun(err:string, info:table)) 设置事件异常处理函数
----@field set_strict fun(enabled:boolean)
----@field is_strict fun():boolean
+---@field set_strict fun(enabled:boolean) 设置严格错误模式
+---@field is_strict fun():boolean 读取严格错误模式状态
 
 ---@type fun(err:string, info:table)|nil
 local error_handler = nil
 local strict = false
 local unpack_values = table.unpack or unpack
 
----@param handler fun(err:string, info:table)|nil
+---@param handler fun(err:string, info:table)|nil 事件异常处理函数；传 nil 表示清除
 local function set_event_error_handler(handler)
     assert(handler == nil or type(handler) == "function", "event error handler must be a function")
     error_handler = handler

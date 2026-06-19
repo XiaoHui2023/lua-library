@@ -1,43 +1,43 @@
 ---@class lib.color
----@field red integer
----@field green integer
----@field blue integer
+---@field red integer 红色通道，范围 0..255
+---@field green integer 绿色通道，范围 0..255
+---@field blue integer 蓝色通道，范围 0..255
 
 ---@class lib.colorlib
----@field MAP lib.color[]
----@field PATTERNS string[]
----@field define fun(red: integer, green: integer, blue: integer): lib.color
----@field is_color fun(value: any): boolean
----@field from_hex fun(hex: string): lib.color
----@field to_hex fun(co: lib.color): string
----@field distance fun(a: lib.color, b: lib.color): number
----@field hue fun(co: lib.color): number
----@field nearest fun(co: lib.color, map?: lib.color[]): lib.color 查找色板中距离最近的颜色
----@field random fun(): lib.color
----@field get_map fun(): lib.color[]
----@field remove fun(text: string): string, integer
----@field add_pattern fun(pattern: string)
----@field clear_patterns fun()
----@field get_patterns fun(): string[]
----@field set_renderer fun(fn: fun(co: lib.color, content: string): string)
----@field reset_renderer fun()
----@field render fun(co: lib.color, content: string): string
----@field RED lib.color
----@field BLUE lib.color
----@field CYAN lib.color
----@field PURPLE lib.color
----@field YELLOW lib.color
----@field ORANGE lib.color
----@field GREEN lib.color
----@field PINK lib.color
----@field GRAY lib.color
----@field LIGHT_GRAY lib.color
----@field LIGHT_BLUE lib.color
----@field LIGHT_GREEN lib.color
----@field DARK_GREEN lib.color
----@field BROWN lib.color
----@field WHITE lib.color
----@field BLACK lib.color
+---@field MAP? lib.color[] 默认颜色列表
+---@field PATTERNS? string[] 已注册的颜色文本匹配模式
+---@field define? fun(red: integer, green: integer, blue: integer): lib.color 创建颜色对象
+---@field is_color? fun(value: any): boolean 判断值是否为颜色对象
+---@field from_hex? fun(hex: string): lib.color 从十六进制字符串创建颜色
+---@field to_hex? fun(co: lib.color): string 将颜色转为 #RRGGBB 字符串
+---@field distance? fun(a: lib.color, b: lib.color): number 计算两个颜色的距离
+---@field hue? fun(co: lib.color): number 计算颜色色相
+---@field nearest? fun(co: lib.color, map?: lib.color[]): lib.color 查找色板中距离最近的颜色
+---@field random? fun(): lib.color 从默认色板随机取色
+---@field get_map? fun(): lib.color[] 复制并返回默认色板
+---@field remove? fun(text: string): string, integer 移除文本中的颜色标记
+---@field add_pattern? fun(pattern: string) 添加颜色文本匹配模式
+---@field clear_patterns? fun() 清空颜色匹配模式
+---@field get_patterns? fun(): string[] 复制并返回颜色匹配模式
+---@field set_renderer? fun(fn: fun(co: lib.color, content: string): string) 设置颜色渲染函数
+---@field reset_renderer? fun() 恢复默认颜色渲染函数
+---@field render? fun(co: lib.color, content: string): string 渲染指定颜色的文本
+---@field RED? lib.color 红色常量
+---@field BLUE? lib.color 蓝色常量
+---@field CYAN? lib.color 青色常量
+---@field PURPLE? lib.color 紫色常量
+---@field YELLOW? lib.color 黄色常量
+---@field ORANGE? lib.color 橙色常量
+---@field GREEN? lib.color 绿色常量
+---@field PINK? lib.color 粉色常量
+---@field GRAY? lib.color 灰色常量
+---@field LIGHT_GRAY? lib.color 浅灰色常量
+---@field LIGHT_BLUE? lib.color 浅蓝色常量
+---@field LIGHT_GREEN? lib.color 浅绿色常量
+---@field DARK_GREEN? lib.color 深绿色常量
+---@field BROWN? lib.color 棕色常量
+---@field WHITE? lib.color 白色常量
+---@field BLACK? lib.color 黑色常量
 
 ---@type lib.colorlib
 local M = {}
@@ -306,7 +306,7 @@ M.get_patterns = function()
     return patterns
 end
 
----@param fn fun(co: lib.color, content: string): string
+---@param fn fun(co: lib.color, content: string): string 新的颜色渲染函数
 M.set_renderer = function(fn)
     assert(type(fn) == "function", "renderer must be a function")
     renderer = fn

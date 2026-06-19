@@ -10,7 +10,7 @@ local M = {}
 ---@field owner? any 效果拥有者，用于跟随拥有者释放
 ---@field source? any 默认伤害来源
 ---@field target? any 默认伤害目标
----@field modifiers table<string, lib.damage.modifier|lib.damage.modifier[]>
+---@field modifiers table<string, lib.damage.modifier|lib.damage.modifier[]> 按伤害阶段分组的修正器
 
 ---@param damage lib.damage
 ---@param options lib.damage.effect_options

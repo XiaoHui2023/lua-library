@@ -1,4 +1,4 @@
----Reactive object factory base.
+---响应式对象工厂基础实现。
 
 local event = require "reactive.event"
 local ref = require "reactive.ref"

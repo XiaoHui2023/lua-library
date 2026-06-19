@@ -42,7 +42,8 @@ end
 
 ---@param model table
 ---@param fn fun(): ...
----@return table, table<table, number>
+---@return table model 被追踪的模型表
+---@return table<table, number> deps 读取依赖版本表
 function M.run(model, fn)
     local ctx = {
         model = model,
@@ -60,7 +61,7 @@ function M.run(model, fn)
     return values, ctx.deps
 end
 
----@param deps table<table, number>
+---@param deps table<table, number> 待检查的依赖版本表
 ---@return boolean
 function M.is_stale(deps)
     for dep, version in pairs(deps) do

@@ -1,6 +1,6 @@
----Project math extension.
----This module intentionally extends the global math table. Angle-facing helpers
----use degrees; original Lua radian functions are available through mathx.raw.
+---项目数学扩展库。
+---本模块会有意扩展全局 math 表；角度相关工具
+---统一使用度，原始 Lua 弧度函数保留在 mathx.raw 中。
 ---@class lib.mathx : mathlib
 local g = math
 
@@ -25,12 +25,12 @@ g.raw = {
 }
 
 ---@class lib.mathx.backend
----@field random_float fun(min: number, max: number): number
+---@field random_float? fun(min: number, max: number): number 随机浮点数后端
 ---@field random_int? fun(min: integer, max: integer): integer 可选随机整数后端
----@field sin fun(angle: number): number
----@field asin fun(value: number): number
----@field cos fun(angle: number): number
----@field atan fun(y: number, x: number): number
+---@field sin? fun(angle: number): number 角度制正弦后端
+---@field asin? fun(value: number): number 返回角度的反正弦后端
+---@field cos? fun(angle: number): number 角度制余弦后端
+---@field atan? fun(y: number, x: number): number 返回角度的反正切后端
 
 ---@type lib.mathx.backend
 local backend = {}
@@ -108,14 +108,14 @@ end
 
 g.use_lua_backend()
 
----Converts a real number to an integer by flooring.
+---通过向下取整把实数转为整数。
 ---@param x number
 ---@return integer
 function g.r2i(x)
     return raw_floor(x)
 end
 
----Rounds a number to the nearest integer. Half values round away from zero.
+---将数值四舍五入到最近整数，五成时远离 0 取整。
 ---@param x number
 ---@return integer
 function g.round(x)
@@ -154,7 +154,7 @@ local function random(min, max)
     return call_backend("random_float", raw_random_float, min, max)
 end
 
----Returns a random real number. The min and max arguments may be reversed.
+---返回随机实数，min 和 max 可以反向传入。
 ---@param min? number 随机范围下限；只传一个值时表示上限
 ---@param max? number 随机范围上限；可小于下限
 ---@return number
@@ -162,7 +162,7 @@ function g.random_real(min, max)
     return random(min, max)
 end
 
----Returns a random angle in degrees. Defaults to [-180, 180].
+---返回随机角度，默认范围为 [-180, 180]。
 ---@param min? number 随机范围下限；只传一个值时表示上限
 ---@param max? number 随机范围上限；可小于下限
 ---@return number
@@ -171,7 +171,7 @@ function g.random_angle(min, max)
     return call_backend("random_float", raw_random_float, min, max)
 end
 
----Returns a random integer. The min and max arguments may be reversed.
+---返回随机整数，min 和 max 可以反向传入。
 ---@param min integer
 ---@param max integer
 ---@return integer
@@ -202,41 +202,41 @@ end
 ---@type number
 g.PI = raw_pi
 
----@param a number angle in degrees
----@return number radians
+---@param a number 角度，单位为度
+---@return number radians 弧度
 function g.angle2radian(a)
     return a * raw_pi / 180
 end
 
----@param a number angle in degrees
----@return number radians
+---@param a number 角度，单位为度
+---@return number radians 弧度
 function g.a2r(a)
     return g.angle2radian(a)
 end
 
----@param r number radians
----@return number angle in degrees
+---@param r number 弧度
+---@return number angle 角度，单位为度
 function g.radian2angle(r)
     return r / raw_pi * 180
 end
 
----@param r number radians
----@return number angle in degrees
+---@param r number 弧度
+---@return number angle 角度，单位为度
 function g.r2a(r)
     return g.radian2angle(r)
 end
 
----@param r number radius
----@param d number arc length
----@return number angle in degrees
+---@param r number 半径
+---@param d number 弧长
+---@return number angle 角度，单位为度
 function g.radian_rotate(r, d)
     assert(r ~= 0, "radius must not be zero")
     return d / (2 * raw_pi * r) * 360
 end
 
----Normalizes an angle to [-180, 180].
----@param a number angle in degrees
----@return number angle in degrees
+---将角度规范到 [-180, 180] 范围。
+---@param a number 角度，单位为度
+---@return number angle 角度，单位为度
 function g.angle_rule(a)
     local normalized = (a + 180) % 360 - 180
     if normalized == -180 and a > 0 then
@@ -245,84 +245,84 @@ function g.angle_rule(a)
     return normalized
 end
 
----@param po lib.point start point
----@param pt lib.point end point
----@return number angle in degrees
+---@param po lib.point 起点
+---@param pt lib.point 终点
+---@return number angle 角度，单位为度
 function g.angle_vector(po, pt)
     return g.atan(point_y(pt) - point_y(po), point_x(pt) - point_x(po))
 end
 
----@param a1 number angle in degrees
----@param a2 number angle in degrees
----@return number absolute angle difference in degrees
+---@param a1 number 第一个角度，单位为度
+---@param a2 number 第二个角度，单位为度
+---@return number difference 绝对角度差，单位为度
 function g.angle_abs(a1, a2)
     return g.abs(g.angle_subtract(a1, a2))
 end
 
----@param a1 number angle in degrees
----@param a2 number angle in degrees
----@return number angle difference in degrees
+---@param a1 number 第一个角度，单位为度
+---@param a2 number 第二个角度，单位为度
+---@return number difference 有符号角度差，单位为度
 function g.angle_subtract(a1, a2)
     return g.angle_rule(a1 - a2)
 end
 
----@param a1 number angle in degrees
----@param a2 number angle in degrees
+---@param a1 number 第一个角度，单位为度
+---@param a2 number 第二个角度，单位为度
 ---@return integer
 function g.angle_sign(a1, a2)
     return g.sign(g.angle_subtract(a1, a2))
 end
 
----Sine using degrees.
----@param a number angle in degrees
+---使用度计算正弦。
+---@param a number 角度，单位为度
 ---@return number
 function g.sin(a)
     return call_backend("sin", raw_sin, a)
 end
 
----Arcsine returning degrees.
+---计算反正弦，结果单位为度。
 ---@param value number
----@return number angle in degrees
+---@return number angle 角度，单位为度
 function g.asin(value)
     return call_backend("asin", raw_asin, value)
 end
 
----Cosine using degrees.
----@param a number angle in degrees
+---使用度计算余弦。
+---@param a number 角度，单位为度
 ---@return number
 function g.cos(a)
     return call_backend("cos", raw_cos, a)
 end
 
----Arctangent returning degrees.
+---计算反正切，结果单位为度。
 ---@param y number
 ---@param x number
----@return number angle in degrees
+---@return number angle 角度，单位为度
 function g.atan(y, x)
     return call_backend("atan", raw_atan, y, x)
 end
 
----@param a number radians
+---@param a number 弧度
 ---@return number
 function g.sin_radian(a)
     return raw_sin(a)
 end
 
----@param a number radians
+---@param a number 弧度
 ---@return number
 function g.cos_radian(a)
     return raw_cos(a)
 end
 
 ---@param value number
----@return number radians
+---@return number radians 弧度
 function g.asin_radian(value)
     return raw_asin(value)
 end
 
 ---@param y number
 ---@param x number
----@return number radians
+---@return number radians 弧度
 function g.atan_radian(y, x)
     return raw_atan(y, x)
 end
@@ -401,7 +401,7 @@ function g.invert(n)
     return (n == 0 and 1) or 0
 end
 
----Truncates a number toward zero.
+---将数值向 0 截断为整数。
 ---@param s number
 ---@return integer? value 转换后的整数；非数字输入返回 nil
 function g.int(s)
@@ -438,7 +438,7 @@ function g.index_to_grid(n)
 end
 
 ---@param n integer
----@param xt integer x limit
+---@param xt integer x 方向上限
 ---@return integer x
 ---@return integer y
 function g.index_to_coord(n, xt)
@@ -449,7 +449,7 @@ end
 
 ---@param x integer
 ---@param y integer
----@param xt integer x limit
+---@param xt integer x 方向上限
 ---@return integer
 function g.coord_to_index(x, y, xt)
     return x + (y - 1) * xt

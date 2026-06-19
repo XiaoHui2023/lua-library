@@ -5,7 +5,7 @@ local M = {}
 ---@type fun(err:string, info:table)|nil
 local error_handler = nil
 
----@param handler fun(err:string, info:table)|nil
+---@param handler fun(err:string, info:table)|nil 事件异常处理函数；传 nil 表示清除
 function M.set_error_handler(handler)
     assert(handler == nil or type(handler) == "function", "event error handler must be a function")
     error_handler = handler

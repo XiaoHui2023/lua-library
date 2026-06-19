@@ -1,4 +1,4 @@
----Lazy and scheduled computed reactive value.
+---惰性且可调度的响应式计算值。
 
 local reactive_base = require "reactive.base"
 local event = require "reactive.event"
@@ -79,7 +79,7 @@ local function enqueue_frame(model)
     request_frame_flush()
 end
 
----@param scheduler fun(flush: fun())|nil
+---@param scheduler fun(flush: fun())|nil 计算值刷新调度函数；传 nil 表示清除
 function M.set_frame_scheduler(scheduler)
     assert(scheduler == nil or type(scheduler) == "function", "computed frame scheduler must be a function")
     frame_scheduler = scheduler

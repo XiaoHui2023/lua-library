@@ -20,6 +20,7 @@ assert(type(debugx.load("not valid lua")) == "table", "load should return empty 
 
 local printed = {}
 local raw_print = print
+---@param ... any 捕获测试输出参数
 print = function(...)
     local parts = {}
     for i = 1, select("#", ...) do

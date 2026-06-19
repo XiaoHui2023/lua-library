@@ -59,7 +59,8 @@ end
 ---@field watch fun(action:function, options?:table):function 监听值变化并返回取消函数
 ---@field dispose fun() 销毁引用和监听器
 
----@param args? table 引用初始值和校验配置
+---@param args? any 引用初始值或配置表
+---@param ... any 多值引用的其余初始值
 ---@return lib.reactive.ref
 function M.new(args, ...)
     if args == nil then

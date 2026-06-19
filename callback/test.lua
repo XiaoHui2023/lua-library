@@ -13,9 +13,9 @@ local function assert_same(actual, expected, message)
 end
 
 ---@class test.OnDamage
----@field source any
----@field target any
----@field amount number
+---@field source any 测试伤害来源
+---@field target any 测试伤害目标
+---@field amount number 测试伤害数值
 local OnDamage = callback.api({ name = "OnDamage" })
 
 local called = 0

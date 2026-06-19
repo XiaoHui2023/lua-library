@@ -33,33 +33,33 @@ M.modifier_phase = create_phase
 ---@field data? table 调用方附加数据
 
 ---@class lib.damage.state
----@field context lib.damage.context
----@field base_damage number
----@field damage number
----@field hit boolean
----@field evaded boolean
----@field damage_immune boolean
----@field control_immune boolean
----@field has_damage boolean
----@field has_control boolean
----@field stopped boolean
+---@field context lib.damage.context 原始伤害上下文
+---@field base_damage number 基础伤害值
+---@field damage number 当前伤害值
+---@field hit boolean 是否命中
+---@field evaded boolean 是否被闪避
+---@field damage_immune boolean 是否伤害免疫
+---@field control_immune boolean 是否控制免疫
+---@field has_damage boolean 是否造成有效伤害
+---@field has_control boolean 是否包含有效控制
+---@field stopped boolean 结算是否已停止
 ---@field stop_reason? string 停止结算的原因
 ---@field source? any 伤害来源对象
 ---@field target? any 伤害目标对象
----@field applied_modifiers lib.damage.applied_modifier[]
+---@field applied_modifiers lib.damage.applied_modifier[] 已生效的修正器记录
 
 ---@class lib.damage.result
----@field damage number
----@field hit boolean
----@field evaded boolean
----@field has_damage boolean
----@field has_control boolean
----@field damage_immune boolean
----@field control_immune boolean
+---@field damage number 当前伤害值
+---@field hit boolean 是否命中
+---@field evaded boolean 是否被闪避
+---@field has_damage boolean 是否造成有效伤害
+---@field has_control boolean 是否包含有效控制
+---@field damage_immune boolean 是否伤害免疫
+---@field control_immune boolean 是否控制免疫
 ---@field source? any 伤害来源对象
 ---@field target? any 伤害目标对象
----@field context lib.damage.context
----@field applied_modifiers lib.damage.applied_modifier[]
+---@field context lib.damage.context 原始伤害上下文
+---@field applied_modifiers lib.damage.applied_modifier[] 已生效的修正器记录
 
 ---@class lib.damage.modifier
 ---@field callback fun(state:lib.damage.state,value?:any,modifier?:lib.damage.modifier):any? 修正器执行函数
@@ -74,10 +74,10 @@ M.modifier_phase = create_phase
 ---@field delete? fun() 移除该修正器的函数
 
 ---@class lib.damage.applied_modifier
----@field phase string
----@field modifier lib.damage.modifier
----@field before any
----@field after any
+---@field phase string 修正器生效的伤害阶段
+---@field modifier lib.damage.modifier 已执行的修正器
+---@field before any 执行前的阶段值
+---@field after any 执行后的阶段值
 
 ---@param args? lib.reactive.factory.options 伤害工厂配置
 ---@return lib.damage

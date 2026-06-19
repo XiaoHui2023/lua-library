@@ -77,6 +77,7 @@ M.warn = function(...)
 end
 
 ---@param msg any
+---@return any result 后端 error 函数的执行结果
 M.error = function(msg)
     return backend.error(traceback_message(msg))
 end
@@ -134,8 +135,8 @@ local function append_dump(parts, value, stack)
     stack[value] = nil
 end
 
----Converts a value to a Lua-literal-like string.
----Functions, userdata, threads, and cyclic references are represented as strings.
+---将值转为接近 Lua 字面量的字符串。
+---函数、userdata、线程和循环引用会以字符串占位表示。
 ---@param value any
 ---@return string text
 M.dump = function(value)
@@ -144,9 +145,9 @@ M.dump = function(value)
     return table.concat(parts)
 end
 
----Runs `return <str>` and returns the result.
----This is intended for simple debug strings produced by `M.dump`; do not pass untrusted content.
----@param str string Lua expression string
+---执行 `return <str>` 并返回表达式结果。
+---仅用于 `M.dump` 产生的简单调试字符串，不要传入不可信内容。
+---@param str string Lua 表达式字符串
 ---@return any value
 M.load = function(str)
     assert(type(str) == "string", "str must be string")
@@ -189,7 +190,7 @@ local function print_value(value, prefix, indent, cache)
     cache[value] = nil
 end
 
----Recursively prints one or more values. Tables are expanded in stable key order.
+---递归打印一个或多个值，表会按稳定键顺序展开。
 ---@param ... any
 M.print = function(...)
     for i = 1, select("#", ...) do

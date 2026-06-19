@@ -93,10 +93,7 @@ M.lock_new_fields = function(t, key)
     })
 end
 
----@generic T: table
----@param t T 目标表
----@param key? any 指定锁定的字段；省略时禁止新增字段
----@return T t 目标表
+---readonly 是 lock_new_fields 的兼容别名。
 M.readonly = M.lock_new_fields
 
 ---创建强只读代理。

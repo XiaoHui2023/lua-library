@@ -14,9 +14,9 @@
 ---@field rich_text_matcher fun(text:string, index:integer):string? 富文本片段匹配函数
 
 ---@class lib.stringx.text_layout.data
----@field data string
----@field width number
----@field wrap boolean
+---@field data string 文本片段内容
+---@field width number 文本片段估算宽度
+---@field wrap boolean 是否表示换行片段
 
 ---@class lib.stringx.text_layout
 local M = {}

@@ -60,7 +60,11 @@ local function stable_sort(items, less)
     return sorted
 end
 
----@param args? { compare?: fun(a:any,b:any):boolean, reversed?: boolean } 集合配置
+---@class lib.template.collection.options
+---@field compare? fun(a:any,b:any):boolean 集合排序函数
+---@field reversed? boolean 导出时是否反向排列
+
+---@param args? lib.template.collection.options 集合配置
 ---@return table
 local function create_collection(args)
     args = args or {}
@@ -177,8 +181,8 @@ end
 ---| "join"
 
 ---@class lib.template.placeholder_renderer.options
----@field stage lib.template.placeholder_renderer_stage
----@field on_render fun(context:table)
+---@field stage lib.template.placeholder_renderer_stage 占位符渲染阶段
+---@field on_render fun(context:table) 占位符渲染函数
 ---@field priority? number 渲染器排序优先级，数值越小越靠前
 
 ---@param args lib.template.placeholder_renderer.options

@@ -1,22 +1,3 @@
----@class lib.stringx.keymap.config
----@field name_to_code table<string, integer> 按键名称到键码的映射
----@field code_to_name table<integer, string> 键码到显示名称的映射
-
----@class lib.stringx.text_width_profile
----@field lower_scale number? 小写字母宽度系数
----@field upper_scale number? 大写字母宽度系数
----@field digit_scale number? 数字宽度系数
----@field normal_scale number? 单字节普通字符宽度系数
----@field two_byte_scale number? 两字节字符宽度系数
----@field three_byte_scale number? 三字节字符宽度系数
----@field four_byte_scale number? 四字节字符宽度系数
----@field space_scale number? 空格宽度系数
----@field height_scale number? 行高系数
-
----@class lib.stringx.text_layout.config
----@field width_profile lib.stringx.text_width_profile? 文本宽度估算参数
----@field rich_text_matcher fun(text:string, index:integer):string? 富文本片段匹配函数
-
 ---@class lib.stringx.config
 ---@field keymap lib.stringx.keymap.config? 按键映射配置
 ---@field text_layout lib.stringx.text_layout.config? 文本布局配置
@@ -47,7 +28,7 @@ function g.configure_text_layout(config)
     text_layout.configure(config)
 end
 
----Replace by Lua pattern.
+---按 Lua 模式替换文本。
 ---@param str string
 ---@param pattern string
 ---@param replacement string
@@ -57,7 +38,7 @@ g.replace = function(str, pattern, replacement)
     return g.gsub(str, pattern, replacement)
 end
 
----Return key code or first byte.
+---返回按键码或首字节。
 ---@param str string
 ---@return integer
 g.ord = function(str)
@@ -69,7 +50,7 @@ g.ord = function(str)
     return g.byte(str)
 end
 
----Return display name or character.
+---返回显示名称或字符。
 ---@param ascii integer
 ---@return string
 g.chr = function(ascii)
@@ -80,7 +61,7 @@ g.chr = function(ascii)
     return g.char(ascii)
 end
 
----Return UTF-8 byte length at index.
+---返回指定位置的 UTF-8 字节长度。
 ---@param inputstr string
 ---@param index? integer 字节起始位置；省略时从 1 开始
 ---@return integer
@@ -88,14 +69,14 @@ g.byte_length = function(inputstr, index)
     return text_layout.byte_length(inputstr, index)
 end
 
----Return estimated text pixel width.
+---返回文本的估算像素宽度。
 ---@param inputstr string
 ---@return number
 g.pixel_width = function(inputstr)
     return text_layout.pixel_width(inputstr)
 end
 
----Count Lua pattern occurrences.
+---统计 Lua 模式的匹配次数。
 ---@param str string
 ---@param pattern string
 ---@return number
@@ -104,7 +85,7 @@ g.count = function(str, pattern)
     return select(2, g.gsub(str, pattern, ""))
 end
 
----Count plain text occurrences.
+---统计普通文本的出现次数。
 ---@param str string
 ---@param text string
 ---@return number
@@ -122,7 +103,7 @@ g.count_plain = function(str, text)
     end
 end
 
----Check whether plain text exists.
+---检查是否包含普通文本。
 ---@param str string
 ---@param key string
 ---@return boolean
@@ -131,7 +112,7 @@ g.exists = function(str, key)
     return lo ~= nil
 end
 
----Trim surrounding whitespace.
+---移除首尾空白。
 ---@param str string
 ---@return string
 g.strip = function(str)
@@ -141,7 +122,7 @@ g.strip = function(str)
     return g.match(str, "^%s*(.-)%s*$")
 end
 
----Wrap text and estimate rendered size.
+---自动换行文本并估算渲染尺寸。
 ---@param text string
 ---@param font_size number
 ---@param width_limit? number 换行宽度上限；省略时不限制
@@ -152,7 +133,7 @@ g.adapt = function(text, font_size, width_limit)
     return text_layout.adapt(text, font_size, width_limit)
 end
 
----Split by plain delimiter.
+---按普通分隔符切分字符串。
 ---@param input string
 ---@param delimiter string
 ---@return string[]
@@ -175,7 +156,7 @@ g.split = function(input, delimiter)
     end
 end
 
----Check whether a string contains digits only.
+---检查字符串是否只包含数字。
 ---@param s string
 ---@return boolean
 g.isdigit = function(s)
@@ -191,7 +172,7 @@ g.isdigit = function(s)
     return true
 end
 
----Keep only decimal digits and normalize leading zeros.
+---仅保留十进制数字，并规范前导 0。
 ---@param s string
 ---@return string
 g.tointeger = function(s)
@@ -217,7 +198,7 @@ g.tointeger = function(s)
     return result
 end
 
----Format a number with compact decimal places.
+---以紧凑小数位格式化数值。
 ---@param num number
 ---@return string
 g.simple_number = function(num)
@@ -241,7 +222,7 @@ g.simple_number = function(num)
     return num .. ""
 end
 
----Convert integer to Chinese numerals for 0..999.
+---将 0..999 范围的整数转为中文数字。
 ---@param num number
 ---@return string
 g.i2ch = function(num)
@@ -297,7 +278,7 @@ g.i2ch = function(num)
     return num .. ""
 end
 
----Find all Lua pattern start positions.
+---查找 Lua 模式的所有起始位置。
 ---@param str string
 ---@param pattern string
 ---@return integer[]
@@ -322,7 +303,7 @@ g.findall = function(str, pattern)
     return result
 end
 
----Find all plain text start positions.
+---查找普通文本的所有起始位置。
 ---@param str string
 ---@param text string
 ---@return integer[]
@@ -340,10 +321,10 @@ g.findall_plain = function(str, text)
     end
 end
 
----Split rich color spans and non-color spans.
+---切分富文本颜色片段和普通片段。
 ---@param str string
----@param func_co fun(sub: string)
----@param func_no fun(sub: string)
+---@param func_co fun(sub: string) 处理颜色片段的函数
+---@param func_no fun(sub: string) 处理非颜色片段的函数
 g.split_color = function(str, func_co, func_no)
     local function find_color(text, mask_s, mask_e)
         if text == nil or g.len(text) == 0 then
@@ -419,7 +400,7 @@ g.split_color = function(str, func_co, func_no)
     do_split(str)
 end
 
----Find plain text from the right.
+---从右侧查找普通文本。
 ---@param s string
 ---@param pt string
 ---@return integer? index 找到时返回最后一次出现的位置
@@ -437,7 +418,7 @@ g.rfind = function(s, pt)
     end
 end
 
----Join strings by separator.
+---用分隔符拼接字符串。
 ---@param string_list string[]
 ---@param split string
 ---@return string
@@ -449,7 +430,7 @@ g.join = function(string_list, split)
     return table.concat(parts, split)
 end
 
----Check prefix.
+---检查前缀。
 ---@param s string
 ---@param prefix string
 ---@return boolean
@@ -457,7 +438,7 @@ g.startswith = function(s, prefix)
     return g.sub(s, 1, g.len(prefix)) == prefix
 end
 
----Check suffix.
+---检查后缀。
 ---@param s string
 ---@param suffix string
 ---@return boolean

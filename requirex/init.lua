@@ -156,8 +156,8 @@ local function resolve_relative(path, level)
     return join_module(base, suffix)
 end
 
----Initialize the root directory used by relative require.
----@param postfix string Path of the caller file relative to the root directory.
+---初始化相对 require 使用的根目录。
+---@param postfix string 调用者文件相对根目录的后缀路径
 M.initial = function(postfix)
     assert(type(postfix) == "string", "postfix must be string")
 
@@ -175,20 +175,20 @@ M.initial = function(postfix)
     root = found_root
 end
 
----Resolve a module path without loading it.
----@param path string Module path.
+---只解析模块路径，不加载模块。
+---@param path string 待解析的模块路径
 ---@param level? integer 调用栈层级；省略时按公开入口解析
----@return string resolved Resolved module path.
+---@return string resolved 解析后的模块路径
 M.resolve = function(path, level)
     assert(type(path) == "string", "path must be string")
     return resolve_relative(path, level or 3)
 end
 
----Wrap require so paths starting with `.` are resolved from the caller file.
----When hot_reload is true, only the resolved target module is cleared.
----@param method fun(path: string): any Loader function, usually the original require.
+---包装 require，使 `.` 开头的路径按调用者文件解析。
+---hot_reload 为 true 时，只清理解析后的目标模块缓存。
+---@param method fun(path: string): any 加载函数，通常为原始 require
 ---@param hot_reload? boolean 是否在加载前清理目标模块缓存
----@return fun(path: string): any require_fn Wrapped loader.
+---@return fun(path: string): any require_fn 包装后的加载函数
 M.reload = function(method, hot_reload)
     assert(type(method) == "function", "method must be function")
 
