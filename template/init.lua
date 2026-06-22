@@ -1,12 +1,14 @@
 ---@type lib.stringx
-local stringx = require "stringx"
+local stringx = require "lib.stringx"
 ---@type lib.metatablex
-local metatablex = require "metatablex"
+local metatablex = require "lib.metatablex"
 ---@type lib.tablex
-local tablex = require "tablex"
+local tablex = require "lib.tablex"
 
 ---@class lib.template
 local M = {}
+
+---@alias lib.template.value_reader fun(input:table, placeholder:string, context:table):(boolean, any)
 
 local VALID_STAGES = {
     format = true,
@@ -58,6 +60,85 @@ local function stable_sort(items, less)
     end
 
     return sorted
+end
+
+---@param value any
+---@return boolean
+local function is_entry(value)
+    return type(value) == "table" and (value.value ~= nil or value.values ~= nil)
+end
+
+---@param value any
+---@return table
+local function to_entry(value)
+    if is_entry(value) then
+        return tablex.clone(value)
+    end
+    return {
+        value = value,
+    }
+end
+
+---@type lib.template.value_reader
+local default_value_reader = function(input, placeholder)
+    local value = input[placeholder]
+    if value == nil then
+        return false, nil
+    end
+    return true, value
+end
+
+---@param reader lib.template.value_reader
+function M.set_default_value_reader(reader)
+    assert(type(reader) == "function", "template default value reader must be function")
+    default_value_reader = reader
+end
+
+---@return lib.template.value_reader
+function M.get_default_value_reader()
+    return default_value_reader
+end
+
+---@class lib.template.table_context.options
+---@field name? string|fun():string 上下文名称
+---@field input table 输入数据表
+---@field value_reader? lib.template.value_reader 输入数据读取函数
+
+---@param args lib.template.table_context.options
+---@return table
+function M.create_table_context(args)
+    assert(type(args) == "table", "template table context args must be table")
+    assert(type(args.input) == "table", "template table context input must be table")
+    assert(args.value_reader == nil or type(args.value_reader) == "function", "template table context value_reader must be function")
+
+    local input = args.input
+    local value_reader = args.value_reader
+
+    return {
+        name = args.name,
+        find = function(placeholder)
+            local reader = value_reader or default_value_reader
+            local found, value = reader(input, placeholder, args)
+            if found == nil or found ~= true and found ~= false then
+                value = found
+                found = value ~= nil
+            end
+            if not found then
+                return nil
+            end
+            return to_entry(value)
+        end,
+        get_prop_fields = function()
+            local fields = {}
+            for key in pairs(input) do
+                fields[#fields + 1] = key
+            end
+            table.sort(fields, function(a, b)
+                return tostring(a) < tostring(b)
+            end)
+            return fields
+        end,
+    }
 end
 
 ---@class lib.template.collection.options
@@ -224,6 +305,7 @@ end
 
 ---@class lib.template.renderer.options
 ---@field exposed_contexts? table[] 可供占位符查找的外部上下文列表
+---@field value_reader? lib.template.value_reader 输入 table 的读取函数
 
 ---@param args? lib.template.renderer.options 模板渲染器配置
 ---@return lib.template.renderer
@@ -232,6 +314,7 @@ function M.create_template_renderer(args)
     args = args or {}
     args.exposed_contexts = args.exposed_contexts or {}
     assert(type(args.exposed_contexts) == "table", "template renderer exposed_contexts must be table")
+    assert(args.value_reader == nil or type(args.value_reader) == "function", "template renderer value_reader must be function")
 
     ---@class lib.template.renderer
     ---@operator call(string):string
@@ -363,15 +446,25 @@ function M.create_template_renderer(args)
             end
             context_name = tostring(context_name or "")
             for _, sub_field in ipairs(sub_fields) do
-                fields[#fields + 1] = context_name .. ":" .. sub_field
+                fields[#fields + 1] = context_name .. ":" .. tostring(sub_field)
             end
         end)
 
         return fields
     end
 
+    local function normalize_exposed_context(exposed_context)
+        if type(exposed_context.find) == "function" and type(exposed_context.get_prop_fields) == "function" then
+            return exposed_context
+        end
+        return M.create_table_context({
+            input = exposed_context,
+            value_reader = args.value_reader,
+        })
+    end
+
     for _, exposed_context in ipairs(args.exposed_contexts) do
-        renderer.exposed_contexts.add(exposed_context)
+        renderer.exposed_contexts.add(normalize_exposed_context(exposed_context))
     end
 
     metatablex.callable(renderer, renderer.run)

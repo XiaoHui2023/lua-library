@@ -2,10 +2,11 @@ local source = debug.getinfo(1, "S").source
 local template_dir = source:sub(1, 1) == "@" and source:sub(2) or source
 template_dir = template_dir:match("^(.*)[/\\][^/\\]+$") or "."
 local library_root = template_dir:match("^(.*)[/\\][^/\\]+$") or template_dir
-package.path = library_root .. "/?.lua;" .. library_root .. "/?/init.lua;" .. package.path
+local project_root = library_root:match("^(.*)[/\\][^/\\]+$") or library_root
+package.path = project_root .. "/?.lua;" .. project_root .. "/?/init.lua;" .. library_root .. "/?.lua;" .. library_root .. "/?/init.lua;" .. package.path
 
-local template = require "template"
-local tablex = require "tablex"
+local template = require "lib.template"
+local tablex = require "lib.tablex"
 
 local function assert_eq(actual, expected, message)
     if actual ~= expected then
@@ -142,6 +143,52 @@ local reversed = template.create_template_renderer({
 })
 assert_eq(reversed("{name}"), "new", "renderer should search newer exposed contexts first")
 assert_list(reversed.get_exposed_fields(), { "ctx:name", "ctx:name" }, "renderer should expose field names")
+
+local table_renderer = template.create_template_renderer({
+    exposed_contexts = {
+        {
+            name = "Rifleman",
+            damage = 18,
+        },
+    },
+})
+assert_eq(table_renderer("{name}:{damage}"), "Rifleman:18", "renderer should read plain table contexts")
+assert_list(table_renderer.get_exposed_fields(), { ":damage", ":name" }, "plain table context should expose table keys")
+
+local custom_reader = template.create_template_renderer({
+    exposed_contexts = {
+        {
+            name = "Mage",
+            stats = {
+                damage = 7,
+            },
+        },
+    },
+    value_reader = function(input, placeholder)
+        if placeholder == "damage" then
+            return true, input.stats.damage * 2
+        end
+        return input[placeholder] ~= nil, input[placeholder]
+    end,
+})
+assert_eq(custom_reader("{name}:{damage}"), "Mage:14", "renderer should support injected table value reader")
+
+local default_reader = template.get_default_value_reader()
+template.set_default_value_reader(function(input, placeholder)
+    if placeholder == "upper_name" then
+        return true, string.upper(input.name)
+    end
+    return default_reader(input, placeholder)
+end)
+local default_injected = template.create_template_renderer({
+    exposed_contexts = {
+        {
+            name = "caster",
+        },
+    },
+})
+assert_eq(default_injected("{upper_name}"), "CASTER", "renderer should support injected default table value reader")
+template.set_default_value_reader(default_reader)
 
 local ok = pcall(template.create_placeholder_renderer, {
     stage = "missing",

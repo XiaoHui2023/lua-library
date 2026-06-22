@@ -260,9 +260,13 @@ reactive.set_factory_timer_driver({
 }, 0.05)
 
 local root = reactive.factory({ name = "root" })
-root.score = root.factory.ref({ value = 1, name = "score" })
-root.child = root.factory.child({ name = "child" })
-root.child.label = root.child.factory.ref({ value = "x", name = "label" })
+root.factory.score.ref({ value = 1 })
+root.factory.field("child").child()
+root.child.factory.label:ref({ value = "x" })
+root.factory.ready.event()
+assert(root.score ~= nil, "factory field builder should assign created ref to owner")
+assert(root.child ~= nil, "factory field builder should assign created child to owner")
+assert(root.ready ~= nil, "factory field builder should assign created event to owner")
 local timer_runs = 0
 local root_timer = root.factory.timer(function(interval_time)
     timer_runs = timer_runs + interval_time

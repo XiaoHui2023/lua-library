@@ -1,63 +1,26 @@
----@type lib.metatablex
-local metatablex = require "lib.metatablex"
----@type lib.module.order
 local module_path = (...):match("^(.*)%.[^.]+$") or "module"
-local order = require(module_path .. ".order")
+---@type lib.module.base
+local base = require(module_path .. ".base")
+
+---@class lib.module.system.registry: lib.module.base.registry
+---@operator call(lib.module.system.options): lib.module.system
+---@field PRIORITY table<string, integer>
 
 ---@class lib.module.system
----@operator call(...): lib.module.system
-local M = {}
+---@field id string
+---@field dependencies (string|lib.module.system)[]
+---@field priority integer
+---@field has_initialized boolean
+---@field on_initialize fun(func: fun(): nil): nil
+---@field initialize fun(): nil
+---@type lib.module.system.registry
+local M
 
-M.PRIORITY = {
+local PRIORITY = {
     FRAMEWORK = -200,
     GAME = -100,
     NORMAL = 0,
 }
-
----@type lib.module.system[]
-local SYSTEMS = {}
-
----@type table<string, lib.module.system>
-local ID_TO_SYSTEM = {}
-
-local next_order_id = 1
-
----@param system lib.module.system
----@param dependency any
----@return lib.module.system
-local function resolve_dependency(system, dependency)
-    if type(dependency) == "string" then
-        local resolved = ID_TO_SYSTEM[dependency]
-        assert(resolved ~= nil, "system<" .. system.id .. "> dependency not registered: " .. dependency)
-        return resolved
-    end
-    assert(type(dependency) == "table" and dependency.__module_kind == "system", "system<" .. system.id .. "> dependency must be a system or id")
-    return dependency
-end
-
----@return lib.module.system[]
-function M.get_systems()
-    return order.sort(SYSTEMS, {
-        type_name = "system",
-        dependencies = function(system)
-            return system.dependencies
-        end,
-        resolve = resolve_dependency,
-    })
-end
-
----@param func fun(system: lib.module.system): nil
-function M.for_each(func)
-    for _, system in ipairs(M.get_systems()) do
-        func(system)
-    end
-end
-
-function M.initialize_all()
-    M.for_each(function(system)
-        system.initialize()
-    end)
-end
 
 ---@class lib.module.system.options
 ---@field id string
@@ -66,22 +29,26 @@ end
 ---@field init? fun(): nil
 
 ---@param args lib.module.system.options
----@return lib.module.system
-function M.register(args)
-    assert(type(args) == "table", "system.register requires options")
-    assert(type(args.id) == "string" and args.id ~= "", "system id must be a non-empty string")
-    assert(ID_TO_SYSTEM[args.id] == nil, "duplicate system id: " .. args.id)
+local function normalize(args)
+    args.dependencies = args.dependencies or {}
+    args.priority = args.priority or PRIORITY.NORMAL
+end
 
-    ---@class lib.module.system
+---@param args lib.module.system.options
+local function validate(args)
+    assert(type(args.id) == "string" and args.id ~= "", "system id must be a non-empty string")
+end
+
+---@param args lib.module.system.options
+---@return lib.module.system
+local function create(args)
+    ---@type lib.module.system
     local system = {
-        __module_kind = "system",
         id = args.id,
-        dependencies = args.dependencies or {},
-        priority = args.priority or M.PRIORITY.NORMAL,
+        dependencies = args.dependencies,
+        priority = args.priority,
         has_initialized = false,
-        order_id = next_order_id,
     }
-    next_order_id = next_order_id + 1
 
     local initialize_handlers = {}
 
@@ -104,14 +71,30 @@ function M.register(args)
         system.has_initialized = true
     end
 
-    metatablex.lock_new_fields(system.dependencies)
-
-    SYSTEMS[#SYSTEMS + 1] = system
-    ID_TO_SYSTEM[system.id] = system
-
     return system
 end
 
-metatablex.callable(M, M.register)
+M = base.new({
+    type_name = "system",
+    normalize = normalize,
+    validate = validate,
+    create = create,
+    after_register = function(system, _, context)
+        context.lock_list(system.dependencies)
+    end,
+})
+
+M.PRIORITY = PRIORITY
+
+---@return lib.module.system[]
+function M.get_systems()
+    return M.get_items()
+end
+
+function M.initialize_all()
+    M.for_each(function(system)
+        system.initialize()
+    end)
+end
 
 return M

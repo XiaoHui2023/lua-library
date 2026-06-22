@@ -93,6 +93,7 @@ local function attach(owner, args)
     local pending = setmetatable({}, { __mode = "k" })
     local children = {}
     local storage = {}
+    local field_builders = {}
     local name_ref = ref.new({
         value = args.name or "",
         name = "factory.name",
@@ -205,6 +206,59 @@ local function attach(owner, args)
         on_dispose.add(function()
             dispose_model(model)
         end)
+    end
+
+    local function assign_field(field_name, model)
+        owner[field_name] = model
+        return model
+    end
+
+    local function build_field_factory(field_name)
+        local field_factory = {}
+
+        local function wrap(method_name)
+            return function(...)
+                if ... == field_factory then
+                    return assign_field(field_name, factory[method_name](select(2, ...)))
+                end
+                return assign_field(field_name, factory[method_name](...))
+            end
+        end
+
+        field_factory.ref = wrap("ref")
+        field_factory.set = wrap("set")
+        field_factory.list_ref = wrap("list_ref")
+        field_factory.table_ref = wrap("table_ref")
+        field_factory.list = wrap("list")
+        field_factory.add = wrap("add")
+        field_factory.table = wrap("table")
+        field_factory.map = wrap("map")
+        field_factory.computed = wrap("computed")
+        field_factory.frame_computed = wrap("frame_computed")
+        field_factory.sync_computed = wrap("sync_computed")
+        field_factory.event = wrap("event")
+        field_factory.once_event = wrap("once_event")
+        field_factory.semaphore = wrap("semaphore")
+        field_factory.scope = wrap("scope")
+        field_factory.delete = wrap("delete")
+        field_factory.child = wrap("child")
+
+        setmetatable(field_factory, {
+            __call = function(_, ...)
+                return field_factory.set(...)
+            end,
+        })
+
+        return field_factory
+    end
+
+    local function get_field_factory(field_name)
+        local field_factory = field_builders[field_name]
+        if field_factory == nil then
+            field_factory = build_field_factory(field_name)
+            field_builders[field_name] = field_factory
+        end
+        return field_factory
     end
 
     local function add_child(factory_child)
@@ -405,8 +459,9 @@ local function attach(owner, args)
         return factory.scope(first, second)
     end
 
-    function factory.register_hook_fields()
-        factory.refresh_names()
+    function factory.field(field_name)
+        assert(type(field_name) == "string" and field_name ~= "", "factory.field requires field name")
+        return get_field_factory(field_name)
     end
 
     function factory.child(first, second)
@@ -452,6 +507,15 @@ local function attach(owner, args)
     setmetatable(factory.timer, {
         __call = function(_, ...)
             return factory.timer.loop(...)
+        end,
+    })
+
+    setmetatable(factory, {
+        __index = function(_, key)
+            if type(key) ~= "string" then
+                return nil
+            end
+            return get_field_factory(key)
         end,
     })
 

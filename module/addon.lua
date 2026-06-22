@@ -4,67 +4,43 @@ local metatablex = require "lib.metatablex"
 local reactive = require "lib.reactive"
 ---@type fun(tb?: any[]): lib.list<any>
 local list = require "lib.list"
----@type lib.module.order
 local module_path = (...):match("^(.*)%.[^.]+$") or "module"
-local order = require(module_path .. ".order")
+---@type lib.module.base
+local base = require(module_path .. ".base")
+
+---@class lib.module.addon.registry: lib.module.base.registry
+---@operator call(lib.module.addon.options): lib.module.addon
+---@field PRIORITY table<string, integer>
+---@field get_addons fun(): lib.list<lib.module.addon>
+---@field initialize_all fun(): nil
 
 ---@class lib.module.addon
----@operator call(...): lib.module.addon
-local M = {}
+---@field id string
+---@field dependencies (string|lib.module.addon)[]
+---@field tags string[]
+---@field to_dependency table<lib.module.addon, boolean>
+---@field priority lib.reactive.ref
+---@field is_enabled lib.reactive.ref
+---@field is_visible lib.reactive.ref
+---@field description lib.reactive.ref
+---@field category lib.reactive.ref
+---@field is_unlocked lib.reactive.ref
+---@field has_initialized lib.reactive.ref
+---@field is_active lib.reactive.computed
+---@field on_activate any
+---@field once_deactivate any
+---@field on_initialize any
+---@field on_deactivate any
+---@field initialize fun(): nil
+---@field bind_activation fun(func: fun(): lib.reactive.once_event|fun(): nil): nil
+---@field create_frame_update_computed fun(expr: fun(): ...): lib.reactive.computed
+---@type lib.module.addon.registry
+local M
 
-M.PRIORITY = {
+local PRIORITY = {
     MODELS = -100,
     NORMAL = 0,
 }
-
----@type lib.module.addon[]
-local ADDONS = {}
-
----@type table<string, lib.module.addon>
-local ID_TO_ADDON = {}
-
-local next_order_id = 1
-
----@param addon lib.module.addon
----@param dependency any
----@return lib.module.addon
-local function resolve_dependency(addon, dependency)
-    if type(dependency) == "string" then
-        local resolved = ID_TO_ADDON[dependency]
-        assert(resolved ~= nil, "addon<" .. addon.id .. "> dependency not registered: " .. dependency)
-        return resolved
-    end
-    assert(type(dependency) == "table" and dependency.__module_kind == "addon", "addon<" .. addon.id .. "> dependency must be an addon or id")
-    return dependency
-end
-
----@return lib.list<lib.module.addon>
-function M.get_addons()
-    return list(order.sort(ADDONS, {
-        type_name = "addon",
-        dependencies = function(addon)
-            return addon.dependencies
-        end,
-        resolve = resolve_dependency,
-    }))
-end
-
----@param id string
----@return lib.module.addon?
-function M.get(id)
-    return ID_TO_ADDON[id]
-end
-
----@param func fun(addon: lib.module.addon): nil
-function M.for_each(func)
-    M.get_addons().for_each(func)
-end
-
-function M.initialize_all()
-    M.for_each(function(addon)
-        addon.initialize()
-    end)
-end
 
 ---@class lib.module.addon.options : lib.reactive.factory.options
 ---@field id? string
@@ -79,15 +55,8 @@ end
 ---@field priority? integer
 
 ---@param args lib.module.addon.options
----@return lib.module.addon
-function M.register(args)
-    assert(type(args) == "table", "addon.register requires options")
-    assert(type(args.name) == "string" and args.name ~= "", "addon name must be a non-empty string")
-
+local function normalize(args)
     args.id = args.id or args.name
-    assert(type(args.id) == "string" and args.id ~= "", "addon id must be a non-empty string")
-    assert(ID_TO_ADDON[args.id] == nil, "duplicate addon id: " .. args.id)
-
     args.description = args.description or ""
     args.dependencies = args.dependencies or {}
     args.tags = args.tags or {}
@@ -101,15 +70,23 @@ function M.register(args)
     if args.is_visible == nil then
         args.is_visible = false
     end
-    args.priority = args.priority or M.PRIORITY.NORMAL
+    args.priority = args.priority or PRIORITY.NORMAL
+end
 
-    ---@class lib.module.addon: lib.reactive.factory
+---@param args lib.module.addon.options
+local function validate(args)
+    assert(type(args.name) == "string" and args.name ~= "", "addon name must be a non-empty string")
+    assert(type(args.id) == "string" and args.id ~= "", "addon id must be a non-empty string")
+end
+
+---@param args lib.module.addon.options
+---@param context lib.module.base.context
+---@return lib.module.addon
+local function create(args, context)
+    ---@type lib.module.addon
     local addon = reactive.factory(args)
     addon.set_class("addon")
-    addon.__module_kind = "addon"
     addon.id = args.id
-    addon.order_id = next_order_id
-    next_order_id = next_order_id + 1
 
     addon.dependencies = args.dependencies
     addon.tags = args.tags
@@ -149,7 +126,7 @@ function M.register(args)
             return false
         end
         for _, dependency in ipairs(addon.dependencies) do
-            if not resolve_dependency(addon, dependency).is_active() then
+            if not context.resolve_dependency(addon, dependency).is_active() then
                 return false
             end
         end
@@ -197,16 +174,32 @@ function M.register(args)
         return computed
     end
 
-    metatablex.lock_new_fields(addon.dependencies)
-    metatablex.lock_new_fields(addon.tags)
-    metatablex.lock_new_fields(addon.to_dependency)
-
-    ADDONS[#ADDONS + 1] = addon
-    ID_TO_ADDON[addon.id] = addon
-
     return addon
 end
 
-metatablex.callable(M, M.register)
+M = base.new({
+    type_name = "addon",
+    normalize = normalize,
+    validate = validate,
+    create = create,
+    after_register = function(addon)
+        metatablex.lock_new_fields(addon.dependencies)
+        metatablex.lock_new_fields(addon.tags)
+        metatablex.lock_new_fields(addon.to_dependency)
+    end,
+})
+
+M.PRIORITY = PRIORITY
+
+---@return lib.list<lib.module.addon>
+function M.get_addons()
+    return list(M.get_items())
+end
+
+function M.initialize_all()
+    M.for_each(function(addon)
+        addon.initialize()
+    end)
+end
 
 return M
