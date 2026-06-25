@@ -85,7 +85,7 @@ end
 local function create(args, context)
     ---@type lib.module.addon
     local addon = reactive.factory(args)
-    addon.set_class("addon")
+    addon.factory.set_class("addon")
     addon.id = args.id
 
     addon.dependencies = args.dependencies

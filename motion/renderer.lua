@@ -61,7 +61,7 @@ function M.renderer(args)
 
     ---@class lib.motion.renderer : lib.reactive.factory
     local o = reactive.factory(args)
-    o.set_class("lib.motion.renderer")
+    o.factory.set_class("lib.motion.renderer")
 
     o.factory.modifiers.add({
         name = "modifiers",

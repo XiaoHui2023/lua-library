@@ -10,7 +10,7 @@ local damage_modifier = require "lib.damage.modifier"
 return function(phase, mode)
     ---@class lib.damage.phase: lib.reactive.factory
     local o = reactive.factory({ name = phase })
-    o.set_class("lib.damage.phase")
+    o.factory.set_class("lib.damage.phase")
 
     o.phase = phase
     o.mode = mode

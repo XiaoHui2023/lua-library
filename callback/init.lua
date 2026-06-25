@@ -1,15 +1,25 @@
 ---@class lib.callback.event
----@field type string 回调对象类型标记
+---@field type string 回调事件类型标记
 ---@field mode string 事件触发模式
 
 ---@class lib.callback.instance
 ---@field api lib.callback.api 所属回调 API
 ---@field values table 实例携带的字段值
+---@field emit fun(self:lib.callback.instance):lib.callback.instance 触发当前回调实例
+---@field trigger fun(self:lib.callback.instance):lib.callback.instance 触发当前回调实例
+---@field get fun(self:lib.callback.instance, key:string):any 读取实例字段
+---@field set fun(self:lib.callback.instance, key:string, value:any):lib.callback.instance 写入实例字段
 
 ---@class lib.callback.api
----@field type string 回调对象类型标记
+---@field type string 回调 API 类型标记
 ---@field name string API 名称
 ---@field _event lib.callback.event API 内部事件
+---@field new fun(self:lib.callback.api, values?:table):lib.callback.instance 创建一次回调实例
+---@field emit fun(self:lib.callback.api, values?:table):lib.callback.instance 创建并触发回调实例
+---@field trigger fun(self:lib.callback.api, values?:table):lib.callback.instance 创建并触发回调实例
+---@field register fun(self:lib.callback.api, handler:fun(api:lib.callback.instance)):fun() 注册回调处理函数
+---@field on fun(self:lib.callback.api, handler:fun(api:lib.callback.instance)):fun() 注册回调处理函数
+---@field clear fun(self:lib.callback.api) 清空回调处理函数
 
 ---@class lib.callback
 ---@field event fun(args?:{name?:string, mode?:string, replay?:boolean}):lib.callback.event 创建普通事件
@@ -18,7 +28,6 @@
 ---@field set_event_error_handler fun(handler?:fun(err:string, info:table)) 设置事件异常处理函数
 ---@field set_strict fun(enabled:boolean) 设置严格错误模式
 ---@field is_strict fun():boolean 读取严格错误模式状态
-
 ---@type fun(err:string, info:table)|nil
 local error_handler = nil
 local strict = false

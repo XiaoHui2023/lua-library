@@ -21,6 +21,16 @@ local FACTORY_FIELD = "factory"
 ---@field parent lib.reactive.ref 父对象引用
 ---@field full_name lib.reactive.computed 完整名称
 ---@field children table<string, table> 已捕获的子对象
+---@field on_set_parent table 父级对象变更时触发的监听器
+---@field on_add_child table 子对象加入时触发的监听器
+---@field on_remove_child table 子对象移除时触发的监听器
+---@field add_child fun(child:table):table 将子对象挂到当前工厂拥有者下
+---@field remove_child fun(child:table):table 将子对象从当前工厂拥有者下移除
+---@field set_class fun(class_name:string) 设置拥有者的类名标记
+---@field is_instance_of fun(value:table, class_name:string):boolean 检查对象是否具有指定类名或类型标记
+---@field set_field fun(field_name:string, ...:any):lib.reactive.ref 创建响应式引用并赋给拥有者字段
+---@field ref_field fun(field_name:string, args?:table):lib.reactive.ref 创建响应式引用并赋给拥有者字段
+---@field add_field fun(field_name:string, args?:table):lib.reactive.collection 创建响应式集合并赋给拥有者字段
 ---@field on_dispose table 销毁监听器
 ---@field set fun(...:any):lib.reactive.ref 创建响应式引用
 ---@field ref fun(args?:table):lib.reactive.ref 创建响应式引用
@@ -92,6 +102,7 @@ local function attach(owner, args)
     local dispose_bound = {}
     local pending = setmetatable({}, { __mode = "k" })
     local children = {}
+    local child_removers = setmetatable({}, { __mode = "k" })
     local storage = {}
     local field_builders = {}
     local name_ref = ref.new({
@@ -106,6 +117,15 @@ local function attach(owner, args)
         mode = "once",
         name = (args.name or "") .. ".dispose",
     })
+    local on_set_parent = event.new({
+        name = (args.name or "") .. ".set_parent",
+    })
+    local on_add_child = event.new({
+        name = (args.name or "") .. ".add_child",
+    })
+    local on_remove_child = event.new({
+        name = (args.name or "") .. ".remove_child",
+    })
 
     local factory = {
         _is_reactive_factory = true,
@@ -116,16 +136,22 @@ local function attach(owner, args)
         children = children,
         on_dispose_event = on_dispose,
         on_dispose = on_dispose.as_listener(),
+        on_set_parent_event = on_set_parent,
+        on_set_parent = on_set_parent.as_listener(),
+        on_add_child_event = on_add_child,
+        on_add_child = on_add_child.as_listener(),
+        on_remove_child_event = on_remove_child,
+        on_remove_child = on_remove_child.as_listener(),
     }
     rawset(owner, FACTORY_FIELD, factory)
 
     owner.class_name = owner.class_name or "factory"
 
-    function owner.set_class(class_name)
+    function factory.set_class(class_name)
         owner.class_name = class_name
     end
 
-    function owner.is_instance_of(value, class_name)
+    function factory.is_instance_of(value, class_name)
         return type(value) == "table" and (value.class_name == class_name or value.type == class_name)
     end
 
@@ -208,6 +234,32 @@ local function attach(owner, args)
         end)
     end
 
+    local function get_owner_parent_ref()
+        local owner_parent = owner.parent
+        if owner_parent == parent_ref then
+            return nil
+        end
+        if type(owner_parent) == "table" and type(owner_parent.set) == "function" then
+            return owner_parent
+        end
+        return nil
+    end
+
+    local function sync_owner_parent(parent)
+        local owner_parent = get_owner_parent_ref()
+        if owner_parent ~= nil and owner_parent() ~= parent then
+            owner_parent.set(parent)
+        end
+    end
+
+    local function get_owner_children_collection()
+        local owner_children = owner.children
+        if type(owner_children) == "table" and type(owner_children.add) == "function" then
+            return owner_children
+        end
+        return nil
+    end
+
     local function assign_field(field_name, model)
         owner[field_name] = model
         return model
@@ -261,7 +313,7 @@ local function attach(owner, args)
         return field_factory
     end
 
-    local function add_child(factory_child)
+    local function add_captured_child(factory_child)
         if factory_child.parent() ~= owner then
             factory_child.set_parent(owner)
         end
@@ -287,8 +339,77 @@ local function attach(owner, args)
         return parent_ref()
     end
 
+    -- 统一迁移父子关系：先离开旧父级，再加入新父级，并向外发布父级变更事件。
     function factory.set_parent(parent)
+        local old_parent = parent_ref()
+        if old_parent == parent then
+            sync_owner_parent(parent)
+            return
+        end
+
+        local old_parent_factory = get_factory(old_parent)
+        if old_parent_factory ~= nil and old_parent_factory._remove_child_owner ~= nil then
+            old_parent_factory._remove_child_owner(owner)
+        end
+
         parent_ref.set(parent)
+        sync_owner_parent(parent)
+
+        local parent_factory = get_factory(parent)
+        if parent_factory ~= nil and parent_factory._add_child_owner ~= nil then
+            parent_factory._add_child_owner(owner)
+        end
+
+        on_set_parent.run(parent, old_parent, owner)
+    end
+
+    -- 供子对象 set_parent 调用，父对象在这里维护自己的 children 集合。
+    function factory._add_child_owner(child)
+        if child == owner or child_removers[child] ~= nil then
+            return
+        end
+
+        local remove_child = function()
+        end
+        local children_collection = get_owner_children_collection()
+        if children_collection ~= nil then
+            remove_child = children_collection.add(child)
+        end
+        child_removers[child] = remove_child
+        on_add_child.run(child, owner)
+    end
+
+    -- 供子对象离开父级或父对象释放时调用，保证 children 集合同步移除。
+    function factory._remove_child_owner(child)
+        local remove_child = child_removers[child]
+        if remove_child == nil then
+            return
+        end
+        child_removers[child] = nil
+        remove_child()
+        on_remove_child.run(child, owner)
+    end
+
+    -- 对外的通用加子对象入口；可响应式对象会转为设置自己的 parent。
+    function factory.add_child(child)
+        local child_factory = get_factory(child)
+        if child_factory ~= nil then
+            child_factory.set_parent(owner)
+            return child
+        end
+        factory._add_child_owner(child)
+        return child
+    end
+
+    -- 对外的通用移除子对象入口；删除子对象本身应由 child.factory.delete 负责。
+    function factory.remove_child(child)
+        local child_factory = get_factory(child)
+        if child_factory ~= nil and child_factory.get_parent() == owner then
+            child_factory.set_parent(nil)
+            return child
+        end
+        factory._remove_child_owner(child)
+        return child
     end
 
     function factory.refresh_names()
@@ -325,7 +446,7 @@ local function attach(owner, args)
             if field_name ~= nil and field_name ~= "" then
                 children[field_name] = model
             end
-            add_child(child_factory)
+            add_captured_child(child_factory)
             apply_name(model, field_name)
             debug_log(string.format("capture child %s", tostring(field_name)))
             return model
@@ -464,6 +585,34 @@ local function attach(owner, args)
         return get_field_factory(field_name)
     end
 
+    function factory.ref_field(field_name, args)
+        return get_field_factory(field_name).ref(args)
+    end
+
+    function factory.set_field(field_name, ...)
+        return get_field_factory(field_name).set(...)
+    end
+
+    function factory.list_ref_field(field_name, args)
+        return get_field_factory(field_name).list_ref(args)
+    end
+
+    function factory.table_ref_field(field_name, args)
+        return get_field_factory(field_name).table_ref(args)
+    end
+
+    function factory.add_field(field_name, args)
+        return get_field_factory(field_name).add(args)
+    end
+
+    function factory.computed_field(field_name, args)
+        return get_field_factory(field_name).computed(args)
+    end
+
+    function factory.event_field(field_name, args)
+        return get_field_factory(field_name).event(args)
+    end
+
     function factory.child(first, second)
         local args = normalize_args(first, second)
         args.parent = owner
@@ -524,8 +673,19 @@ local function attach(owner, args)
             return
         end
         disposed = true
+        factory.set_parent(nil)
+        local child_list = {}
+        for child in pairs(child_removers) do
+            child_list[#child_list + 1] = child
+        end
+        for _, child in ipairs(child_list) do
+            factory._remove_child_owner(child)
+        end
         on_dispose.run()
         on_dispose.clear()
+        on_set_parent.clear()
+        on_add_child.clear()
+        on_remove_child.clear()
         factory.full_name.dispose()
         parent_ref.dispose()
         name_ref.dispose()

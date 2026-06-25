@@ -85,7 +85,7 @@ function M.create(args)
     ---@class lib.damage: lib.reactive.factory
     ---@operator call(lib.damage.context):lib.damage.result
     local o = reactive.factory(args)
-    o.set_class("lib.damage")
+    o.factory.set_class("lib.damage")
 
     o.prepare = create_phase(M.PHASE.PREPARE, "chain")
     o.source = side.create_source()
