@@ -75,6 +75,7 @@ local addon_dependency = addon({
     id = "test.addon.dependency",
     name = "Dependency Addon",
 })
+assert_same(addon_dependency.name(), "Dependency Addon", "addon should expose name")
 local addon_dependent = addon({
     id = "test.addon.dependent",
     name = "Dependent Addon",

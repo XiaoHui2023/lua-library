@@ -2,6 +2,16 @@ local event = require "reactive.event"
 
 local M = {}
 
+---@class lib.reactive.scope
+---@field type "scope"
+---@field on_dispose table
+---@field add fun(item:any):function
+---@field mount fun(item:any):function
+---@field attach fun(item:any):function
+---@field dispose fun()
+---@field clear fun()
+---@field is_disposed fun():boolean
+
 local function dispose_item(item)
     if item == nil then
         return
@@ -23,7 +33,7 @@ local function dispose_item(item)
 end
 
 ---@param args? table 释放作用域配置
----@return table
+---@return lib.reactive.scope
 function M.new(args)
     args = args or {}
     local disposed = false

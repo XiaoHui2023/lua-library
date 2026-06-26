@@ -13,8 +13,16 @@ local timer = require "reactive.timer"
 local M = {}
 
 local FACTORY_FIELD = "factory"
+local timer_interval_time = ref.new({
+    value = timer.get_default_interval_time(),
+    name = "factory.timer.interval_time",
+    checker = function(interval_time)
+        return type(interval_time) == "number" and interval_time > 0
+    end,
+})
 
 ---@class lib.reactive.factory
+---@field delete lib.reactive.scope Object cleanup scope.
 ---@field _is_reactive_factory boolean 响应式工厂标记
 ---@field owner table 拥有该工厂的对象
 ---@field name lib.reactive.ref 工厂短名称
@@ -24,39 +32,45 @@ local FACTORY_FIELD = "factory"
 ---@field on_set_parent table 父级对象变更时触发的监听器
 ---@field on_add_child table 子对象加入时触发的监听器
 ---@field on_remove_child table 子对象移除时触发的监听器
----@field add_child fun(child:table):table 将子对象挂到当前工厂拥有者下
----@field remove_child fun(child:table):table 将子对象从当前工厂拥有者下移除
+---@field add_child fun(child:lib.reactive.factory):lib.reactive.factory Attach a child factory.
+---@field add_children fun(children:lib.reactive.factory[]):lib.reactive.factory[] Attach child factories.
+---@field remove_child fun(child:lib.reactive.factory):lib.reactive.factory Remove a child factory.
 ---@field set_class fun(class_name:string) 设置拥有者的类名标记
 ---@field is_instance_of fun(value:table, class_name:string):boolean 检查对象是否具有指定类名或类型标记
----@field set_field fun(field_name:string, ...:any):lib.reactive.ref 创建响应式引用并赋给拥有者字段
----@field ref_field fun(field_name:string, args?:table):lib.reactive.ref 创建响应式引用并赋给拥有者字段
----@field add_field fun(field_name:string, args?:table):lib.reactive.collection 创建响应式集合并赋给拥有者字段
+---@field ref_field fun(field_name:string, ...:any):lib.reactive.ref 创建响应式引用并赋给拥有者字段
+---@field ref_config_field fun(field_name:string, args?:table):lib.reactive.ref 按配置创建响应式引用并赋给拥有者字段
+---@field collection_field fun(field_name:string, args?:table):lib.reactive.collection 创建响应式集合并赋给拥有者字段
 ---@field on_dispose table 销毁监听器
----@field set fun(...:any):lib.reactive.ref 创建响应式引用
----@field ref fun(args?:table):lib.reactive.ref 创建响应式引用
----@field add fun(args?:table):lib.reactive.collection 创建响应式集合
----@field computed fun(args:table|function):lib.reactive.computed 创建计算值
----@field event fun(args?:table):lib.reactive.event 创建普通事件
----@field once_event fun(args?:table):lib.reactive.event 创建一次性事件
----@field semaphore fun(args?:table):lib.reactive.semaphore 创建信号量
----@field scope fun(args?:table):table 创建释放作用域
+---@field create_ref fun(args?:table):lib.reactive.ref 创建未挂字段的响应式引用
+---@field create_collection fun(args?:table):lib.reactive.collection 创建未挂字段的响应式集合
+---@field create_computed fun(args:table|function):lib.reactive.computed 创建未挂字段的计算值
+---@field create_event fun(args?:table):lib.reactive.event 创建未挂字段的普通事件
+---@field create_once_event fun(args?:table):lib.reactive.event 创建未挂字段的一次性事件
+---@field create_semaphore fun(args?:table):lib.reactive.semaphore 创建未挂字段的信号量
+---@field create_scope fun(args?:table):table 创建未挂字段的释放作用域
 
 ---@class lib.reactive.factory.options
 ---@field name? string 工厂名称
----@field parent? table 父对象
+---@field class_name? string 拥有者的类名标记
+---@field parent? lib.reactive.factory Parent factory.
 ---@field debug? boolean 是否打印调试信息
----@field interval_time? number 默认定时器间隔，单位秒
 
 ---@param loop_func? fun(func:function, interval_time:number) 循环调度函数
 ---@param interval_time? number 循环间隔，单位秒
 function M.set_timer_loop(loop_func, interval_time)
     timer.set_loop(loop_func, interval_time)
+    if interval_time ~= nil then
+        timer_interval_time.set(interval_time)
+    end
 end
 
 ---@param driver? table|fun(trigger:function, interval_time:number) 定时器驱动
 ---@param interval_time? number 定时器间隔，单位秒
 function M.set_timer_driver(driver, interval_time)
     timer.set_driver(driver, interval_time)
+    if interval_time ~= nil then
+        timer_interval_time.set(interval_time)
+    end
 end
 
 ---@param value any
@@ -145,7 +159,7 @@ local function attach(owner, args)
     }
     rawset(owner, FACTORY_FIELD, factory)
 
-    owner.class_name = owner.class_name or "factory"
+    owner.class_name = args.class_name or owner.class_name or "factory"
 
     function factory.set_class(class_name)
         owner.class_name = class_name
@@ -159,8 +173,7 @@ local function attach(owner, args)
         name = "factory.full_name",
         auto = true,
         expr = function()
-            local parent = parent_ref()
-            local parent_factory = get_factory(parent)
+            local parent_factory = parent_ref()
             local name = name_ref()
             if parent_factory ~= nil then
                 local parent_name = parent_factory.get_full_name()
@@ -234,24 +247,6 @@ local function attach(owner, args)
         end)
     end
 
-    local function get_owner_parent_ref()
-        local owner_parent = owner.parent
-        if owner_parent == parent_ref then
-            return nil
-        end
-        if type(owner_parent) == "table" and type(owner_parent.set) == "function" then
-            return owner_parent
-        end
-        return nil
-    end
-
-    local function sync_owner_parent(parent)
-        local owner_parent = get_owner_parent_ref()
-        if owner_parent ~= nil and owner_parent() ~= parent then
-            owner_parent.set(parent)
-        end
-    end
-
     local function get_owner_children_collection()
         local owner_children = owner.children
         if type(owner_children) == "table" and type(owner_children.add) == "function" then
@@ -277,29 +272,34 @@ local function attach(owner, args)
             end
         end
 
-        field_factory.ref = wrap("ref")
-        field_factory.set = wrap("set")
-        field_factory.list_ref = wrap("list_ref")
-        field_factory.table_ref = wrap("table_ref")
-        field_factory.list = wrap("list")
-        field_factory.add = wrap("add")
-        field_factory.table = wrap("table")
-        field_factory.map = wrap("map")
-        field_factory.computed = wrap("computed")
-        field_factory.frame_computed = wrap("frame_computed")
-        field_factory.sync_computed = wrap("sync_computed")
-        field_factory.event = wrap("event")
-        field_factory.once_event = wrap("once_event")
-        field_factory.semaphore = wrap("semaphore")
-        field_factory.scope = wrap("scope")
-        field_factory.delete = wrap("delete")
+        field_factory.ref = function(...)
+            local values = { n = select("#", ...), ... }
+            if values[1] == field_factory then
+                table.remove(values, 1)
+                values.n = values.n - 1
+            end
+            local args = { values = values }
+            return assign_field(field_name, factory.create_ref(args))
+        end
+        field_factory.ref_config = function(...)
+            local args = ...
+            if args == field_factory then
+                args = select(2, ...)
+            end
+            args = args or {}
+            return assign_field(field_name, factory.create_ref(args))
+        end
+        field_factory.list_ref = wrap("create_list_ref")
+        field_factory.table_ref = wrap("create_table_ref")
+        field_factory.collection = wrap("create_collection")
+        field_factory.computed = wrap("create_computed")
+        field_factory.frame_computed = wrap("create_frame_computed")
+        field_factory.sync_computed = wrap("create_sync_computed")
+        field_factory.event = wrap("create_event")
+        field_factory.once_event = wrap("create_once_event")
+        field_factory.semaphore = wrap("create_semaphore")
+        field_factory.scope = wrap("create_scope")
         field_factory.child = wrap("child")
-
-        setmetatable(field_factory, {
-            __call = function(_, ...)
-                return field_factory.set(...)
-            end,
-        })
 
         return field_factory
     end
@@ -314,12 +314,21 @@ local function attach(owner, args)
     end
 
     local function add_captured_child(factory_child)
-        if factory_child.parent() ~= owner then
-            factory_child.set_parent(owner)
-        end
         on_dispose.add(function()
             factory_child.dispose()
         end)
+    end
+
+    local function assert_factory(value, arg_name)
+        assert(type(value) == "table" and rawget(value, "_is_reactive_factory"), arg_name .. " must be a reactive factory")
+        return value
+    end
+
+    local function assert_optional_factory(value, arg_name)
+        if value == nil then
+            return nil
+        end
+        return assert_factory(value, arg_name)
     end
 
     function factory.get_name()
@@ -341,75 +350,75 @@ local function attach(owner, args)
 
     -- 统一迁移父子关系：先离开旧父级，再加入新父级，并向外发布父级变更事件。
     function factory.set_parent(parent)
-        local old_parent = parent_ref()
-        if old_parent == parent then
-            sync_owner_parent(parent)
+        local parent_factory = assert_optional_factory(parent, "factory.set_parent parent")
+        local old_parent_factory = parent_ref()
+        if old_parent_factory == parent_factory then
             return
         end
 
-        local old_parent_factory = get_factory(old_parent)
-        if old_parent_factory ~= nil and old_parent_factory._remove_child_owner ~= nil then
-            old_parent_factory._remove_child_owner(owner)
+        if old_parent_factory ~= nil and old_parent_factory._remove_child_factory ~= nil then
+            old_parent_factory._remove_child_factory(factory)
         end
 
-        parent_ref.set(parent)
-        sync_owner_parent(parent)
+        parent_ref.set(parent_factory)
 
-        local parent_factory = get_factory(parent)
-        if parent_factory ~= nil and parent_factory._add_child_owner ~= nil then
-            parent_factory._add_child_owner(owner)
+        if parent_factory ~= nil and parent_factory._add_child_factory ~= nil then
+            parent_factory._add_child_factory(factory)
         end
 
-        on_set_parent.run(parent, old_parent, owner)
+        on_set_parent.run(parent_factory, old_parent_factory, owner)
     end
 
     -- 供子对象 set_parent 调用，父对象在这里维护自己的 children 集合。
-    function factory._add_child_owner(child)
-        if child == owner or child_removers[child] ~= nil then
+    function factory._add_child_factory(child_factory)
+        child_factory = assert_factory(child_factory, "factory._add_child_factory child")
+        if child_factory == factory or child_removers[child_factory] ~= nil then
             return
         end
 
+        local child = child_factory.owner
         local remove_child = function()
         end
         local children_collection = get_owner_children_collection()
         if children_collection ~= nil then
             remove_child = children_collection.add(child)
         end
-        child_removers[child] = remove_child
-        on_add_child.run(child, owner)
+        child_removers[child_factory] = remove_child
+        on_add_child.run(child, owner, child_factory, factory)
     end
 
-    -- 供子对象离开父级或父对象释放时调用，保证 children 集合同步移除。
-    function factory._remove_child_owner(child)
-        local remove_child = child_removers[child]
+    function factory._remove_child_factory(child_factory)
+        child_factory = assert_factory(child_factory, "factory._remove_child_factory child")
+        local remove_child = child_removers[child_factory]
         if remove_child == nil then
             return
         end
-        child_removers[child] = nil
+        child_removers[child_factory] = nil
         remove_child()
-        on_remove_child.run(child, owner)
+        on_remove_child.run(child_factory.owner, owner, child_factory, factory)
     end
 
-    -- 对外的通用加子对象入口；可响应式对象会转为设置自己的 parent。
     function factory.add_child(child)
-        local child_factory = get_factory(child)
-        if child_factory ~= nil then
-            child_factory.set_parent(owner)
-            return child
-        end
-        factory._add_child_owner(child)
-        return child
+        local child_factory = assert_factory(child, "factory.add_child child")
+        child_factory.set_parent(factory)
+        return child_factory
     end
 
-    -- 对外的通用移除子对象入口；删除子对象本身应由 child.factory.delete 负责。
     function factory.remove_child(child)
-        local child_factory = get_factory(child)
-        if child_factory ~= nil and child_factory.get_parent() == owner then
+        local child_factory = assert_factory(child, "factory.remove_child child")
+        if child_factory.get_parent() == factory then
             child_factory.set_parent(nil)
-            return child
+            return child_factory
         end
-        factory._remove_child_owner(child)
-        return child
+        factory._remove_child_factory(child_factory)
+        return child_factory
+    end
+
+    function factory.add_children(children)
+        for _, child in ipairs(children or {}) do
+            factory.add_child(child)
+        end
+        return children
     end
 
     function factory.refresh_names()
@@ -485,51 +494,27 @@ local function attach(owner, args)
         return model
     end
 
-    function factory.ref(first, second)
+    function factory.create_ref(first, second)
         local args = normalize_args(first, second)
         return factory.register(ref.new(args), args.name)
     end
 
-    function factory.set(...)
-        local values = { n = select("#", ...), ... }
-        if values[1] == factory then
-            table.remove(values, 1)
-            values.n = values.n - 1
-        end
-        local args = {
-            values = values,
-        }
-        return factory.register(ref.new(args), args.name)
-    end
-
-    function factory.list_ref(first, second)
+    function factory.create_list_ref(first, second)
         local args = normalize_args(first, second)
         return factory.register(list_ref.new(args), args.name)
     end
 
-    function factory.table_ref(first, second)
+    function factory.create_table_ref(first, second)
         local args = normalize_args(first, second)
         return factory.register(table_ref.new(args), args.name)
     end
 
-    function factory.list(first, second)
-        return factory.list_ref(first, second)
-    end
-
-    function factory.add(first, second)
+    function factory.create_collection(first, second)
         local args = normalize_args(first, second)
         return factory.register(collection.new(args), args.name)
     end
 
-    function factory.table(first, second)
-        return factory.table_ref(first, second)
-    end
-
-    function factory.map(first, second)
-        return factory.table_ref(first, second)
-    end
-
-    function factory.computed(first, second)
+    function factory.create_computed(first, second)
         local args = normalize_args(first, second)
         if type(args) == "function" then
             args = { expr = args }
@@ -537,7 +522,7 @@ local function attach(owner, args)
         return factory.register(computed.new(args), args.name)
     end
 
-    function factory.frame_computed(first, second)
+    function factory.create_frame_computed(first, second)
         local args = normalize_args(first, second)
         if type(args) == "function" then
             args = { expr = args }
@@ -546,7 +531,7 @@ local function attach(owner, args)
         return factory.register(computed.new(args), args.name)
     end
 
-    function factory.sync_computed(first, second)
+    function factory.create_sync_computed(first, second)
         local args = normalize_args(first, second)
         if type(args) == "function" then
             args = { expr = args }
@@ -555,29 +540,25 @@ local function attach(owner, args)
         return factory.register(computed.new(args), args.name)
     end
 
-    function factory.event(first, second)
+    function factory.create_event(first, second)
         local args = normalize_args(first, second)
         args.mode = "always"
         return factory.register(event.new(args), args.name)
     end
 
-    function factory.once_event(first, second)
+    function factory.create_once_event(first, second)
         local args = normalize_args(first, second)
         return factory.register(event.once(args), args.name)
     end
 
-    function factory.semaphore(first, second)
+    function factory.create_semaphore(first, second)
         local args = normalize_args(first, second)
         return factory.register(semaphore.new(args), args.name)
     end
 
-    function factory.scope(first, second)
+    function factory.create_scope(first, second)
         local args = normalize_args(first, second)
         return factory.register(scope.new(args), args.name)
-    end
-
-    function factory.delete(first, second)
-        return factory.scope(first, second)
     end
 
     function factory.field(field_name)
@@ -585,12 +566,12 @@ local function attach(owner, args)
         return get_field_factory(field_name)
     end
 
-    function factory.ref_field(field_name, args)
-        return get_field_factory(field_name).ref(args)
+    function factory.ref_field(field_name, ...)
+        return get_field_factory(field_name).ref(...)
     end
 
-    function factory.set_field(field_name, ...)
-        return get_field_factory(field_name).set(...)
+    function factory.ref_config_field(field_name, args)
+        return get_field_factory(field_name).ref_config(args)
     end
 
     function factory.list_ref_field(field_name, args)
@@ -601,8 +582,8 @@ local function attach(owner, args)
         return get_field_factory(field_name).table_ref(args)
     end
 
-    function factory.add_field(field_name, args)
-        return get_field_factory(field_name).add(args)
+    function factory.collection_field(field_name, args)
+        return get_field_factory(field_name).collection(args)
     end
 
     function factory.computed_field(field_name, args)
@@ -615,17 +596,15 @@ local function attach(owner, args)
 
     function factory.child(first, second)
         local args = normalize_args(first, second)
-        args.parent = owner
+        args.parent = factory
         local child = M.new(args)
         return factory.register(child, args.name)
     end
 
-    owner.name = factory.name
-    owner.full_name = factory.full_name
-    owner.delete = factory.scope({ name = "delete" })
+    factory.delete = scope.new({ name = "delete" })
 
     factory.timer = {}
-    factory.timer.interval_time = factory.set(args.interval_time or timer.get_default_interval_time())
+    factory.timer.interval_time = timer_interval_time
     factory.interval_time = factory.timer.interval_time
 
     local function normalize_timer_args(func, interval_or_scope, delete_scope)
@@ -659,27 +638,19 @@ local function attach(owner, args)
         end,
     })
 
-    setmetatable(factory, {
-        __index = function(_, key)
-            if type(key) ~= "string" then
-                return nil
-            end
-            return get_field_factory(key)
-        end,
-    })
-
     function factory.dispose()
         if disposed then
             return
         end
         disposed = true
+        factory.delete.dispose()
         factory.set_parent(nil)
         local child_list = {}
         for child in pairs(child_removers) do
             child_list[#child_list + 1] = child
         end
         for _, child in ipairs(child_list) do
-            factory._remove_child_owner(child)
+            factory._remove_child_factory(child)
         end
         on_dispose.run()
         on_dispose.clear()
@@ -789,12 +760,7 @@ local function attach(owner, args)
     end
 
     if args.parent ~= nil then
-        local parent_factory = get_factory(args.parent)
-        if parent_factory ~= nil then
-            parent_factory.capture(args.name or "", owner)
-        else
-            factory.set_parent(args.parent)
-        end
+        factory.set_parent(args.parent)
     end
 
     return factory

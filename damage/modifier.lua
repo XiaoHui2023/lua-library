@@ -10,7 +10,11 @@ end
 ---@return boolean
 local function is_disposable(value)
     return type(value) == "table"
-        and (value.on_dispose ~= nil or value.delete ~= nil or value.dispose ~= nil or value.clear ~= nil)
+        and (value.on_dispose ~= nil
+            or (value.factory ~= nil and value.factory.delete ~= nil)
+            or value.delete ~= nil
+            or value.dispose ~= nil
+            or value.clear ~= nil)
 end
 
 ---@param owner any
@@ -22,6 +26,9 @@ function M.bind_owner_delete(owner, remove)
     end
     if type(owner.on_dispose) == "table" and owner.on_dispose.add ~= nil then
         return owner.on_dispose.add(remove)
+    end
+    if type(owner.factory) == "table" and type(owner.factory.delete) == "table" and owner.factory.delete.add ~= nil then
+        return owner.factory.delete.add(remove)
     end
     if type(owner.delete) == "table" and owner.delete.add ~= nil then
         return owner.delete.add(remove)

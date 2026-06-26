@@ -24,10 +24,10 @@ return function(phase, mode)
     o.modifiers.wrap_add(damage_modifier.normalize)
 
     ---@type lib.reactive.event<lib.damage.applied_modifier>
-    o.factory.on_modify.event({ name = "on_modify" })
+    o.factory.event_field("on_modify", { name = "on_modify" })
 
     ---@type lib.reactive.event<any>
-    o.factory.on_run.event({ name = "on_run" })
+    o.factory.event_field("on_run", { name = "on_run" })
 
     o.last_value = nil
 

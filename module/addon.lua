@@ -16,6 +16,7 @@ local base = require(module_path .. ".base")
 
 ---@class lib.module.addon
 ---@field id string
+---@field name lib.reactive.ref
 ---@field dependencies (string|lib.module.addon)[]
 ---@field tags string[]
 ---@field to_dependency table<lib.module.addon, boolean>
@@ -87,6 +88,7 @@ local function create(args, context)
     local addon = reactive.factory(args)
     addon.factory.set_class("addon")
     addon.id = args.id
+    addon.name = reactive.ref(args.name)
 
     addon.dependencies = args.dependencies
     addon.tags = args.tags

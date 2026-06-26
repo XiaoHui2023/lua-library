@@ -63,7 +63,7 @@ function M.renderer(args)
     local o = reactive.factory(args)
     o.factory.set_class("lib.motion.renderer")
 
-    o.factory.modifiers.add({
+    o.factory.collection_field("modifiers", {
         name = "modifiers",
         compare = compare_modifier,
         prevent_duplicate = true,
@@ -73,15 +73,15 @@ function M.renderer(args)
     o.dt = dt
     o.reset_z = reset_z
     o.reset_on_empty = args.reset_on_empty or false
-    o.factory.on_update.event({ name = "update" })
-    o.factory.before_render.event({ name = "before_render" })
-    o.factory.after_resolve.event({ name = "after_resolve" })
-    o.factory.on_complete.event({ name = "complete" })
-    o.factory.on_active_interrupt.event({ name = "active_interrupt" })
-    o.factory.on_passive_interrupt.event({ name = "passive_interrupt" })
+    o.factory.event_field("on_update", { name = "update" })
+    o.factory.event_field("before_render", { name = "before_render" })
+    o.factory.event_field("after_resolve", { name = "after_resolve" })
+    o.factory.event_field("on_complete", { name = "complete" })
+    o.factory.event_field("on_active_interrupt", { name = "active_interrupt" })
+    o.factory.event_field("on_passive_interrupt", { name = "passive_interrupt" })
     o.on_interrupt = o.on_passive_interrupt
-    o.factory.on_reset_height.event({ name = "reset_height" })
-    o.factory.loop_scope.delete({ name = "loop" })
+    o.factory.event_field("on_reset_height", { name = "reset_height" })
+    o.factory.field("loop_scope").scope({ name = "loop" })
 
     ---@param reason string
     ---@param modifier? lib.motion.modifier 参数说明
@@ -157,7 +157,7 @@ function M.renderer(args)
             })
         end
         local remove = o.modifiers.add(modifier)
-        o.delete.mount(remove)
+        o.factory.delete.mount(remove)
         if modifier.delete ~= nil and modifier.delete.mount ~= nil then
             modifier.delete.mount(remove)
         end
@@ -233,7 +233,7 @@ function M.renderer(args)
 
     function o.stop()
         o.loop_scope()
-        o.factory.loop_scope.delete({ name = "loop" })
+        o.factory.field("loop_scope").scope({ name = "loop" })
     end
 
     ---@param get_data? fun():table|lib.motion.data|nil 参数说明

@@ -5,16 +5,25 @@
 ## 模块
 
 ```text
+callback/    # 事件与 callback API
 color/       # 颜色定义、颜色文本渲染
+damage/      # 分阶段伤害结算
 debugx/      # 调试输出辅助
 list/        # 可排序、可遍历、可安全删除的列表结构
 mathx/       # 工程增强 math，角度函数使用角度制
 metatablex/  # metatable 辅助
+module/      # system、blueprint、addon 注册模型
+motion/      # 运动数据、修正与渲染分离
+point/       # 轻量坐标点结构
 reactive/    # 响应式数据辅助
 requirex/    # 相对 require 与开发期单模块重载
+state_machine/ # 层级状态机
 stringx/     # 工程增强 string
 tablex/      # table 工具函数
+template/    # 字符串模板渲染
 ```
+
+每个模块目录都有自己的 `README.md`。根 README 只做索引与加载说明，模块级用法、目录和设计特性写在对应模块目录内。
 
 ## 加载
 

@@ -37,7 +37,11 @@ function M.mount_delete(owner, side)
     for _, phase in pairs(side) do
         if type(phase) == "table" and phase.delete ~= nil and not mounted[phase] then
             mounted[phase] = true
-            owner.delete.mount(phase.delete)
+            if owner.factory and owner.factory.delete then
+                owner.factory.delete.mount(phase.delete)
+            else
+                owner.delete.mount(phase.delete)
+            end
         end
     end
 end

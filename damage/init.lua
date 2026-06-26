@@ -112,19 +112,19 @@ function M.create(args)
         cc_immunity = o.target.control_immunity,
     }
 
-    o.delete.mount(o.prepare.delete)
+    o.factory.delete.mount(o.prepare.delete)
     side.mount_delete(o, o.source)
     side.mount_delete(o, o.target)
 
-    o.factory.on_start.event({ name = "on_start" })
-    o.factory.on_prepare.event({ name = "on_prepare" })
-    o.factory.on_hit.event({ name = "on_hit" })
-    o.factory.on_miss.event({ name = "on_miss" })
-    o.factory.on_damage_changed.event({ name = "on_damage_changed" })
-    o.factory.on_damage_immunity.event({ name = "on_damage_immunity" })
-    o.factory.on_final_immunity.event({ name = "on_final_immunity" })
-    o.factory.on_control_immunity.event({ name = "on_control_immunity" })
-    o.factory.on_finish.event({ name = "on_finish" })
+    o.factory.event_field("on_start", { name = "on_start" })
+    o.factory.event_field("on_prepare", { name = "on_prepare" })
+    o.factory.event_field("on_hit", { name = "on_hit" })
+    o.factory.event_field("on_miss", { name = "on_miss" })
+    o.factory.event_field("on_damage_changed", { name = "on_damage_changed" })
+    o.factory.event_field("on_damage_immunity", { name = "on_damage_immunity" })
+    o.factory.event_field("on_final_immunity", { name = "on_final_immunity" })
+    o.factory.event_field("on_control_immunity", { name = "on_control_immunity" })
+    o.factory.event_field("on_finish", { name = "on_finish" })
 
     ---@param phase_name string
     ---@param modifier lib.damage.modifier

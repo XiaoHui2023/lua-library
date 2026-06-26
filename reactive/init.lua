@@ -19,6 +19,7 @@ local timer = require "reactive.timer"
 ---@alias reactive.add<T> lib.reactive.collection<T>
 ---@alias reactive.collection<T> lib.reactive.collection<T>
 ---@alias reactive.semaphore lib.reactive.semaphore
+---@alias reactive.scope lib.reactive.scope
 ---@alias reactive.factory lib.reactive.factory
 ---@alias lib.reactive.set<T> lib.reactive.ref<T>
 ---@alias lib.reactive.add<T> lib.reactive.collection<T>
