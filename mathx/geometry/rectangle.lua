@@ -78,5 +78,22 @@ function geometry.rectangle(position, width, height)
             and o.bottom() >= other.top()
     end
 
+    ---@return lib.mathx.geometry.rectangle
+    function o.bounds()
+        return o
+    end
+
+    ---@param position lib.point
+    ---@param radius number
+    ---@return boolean
+    function o.intersects_circle(position, radius)
+        radius = math.abs(radius)
+        local x = geometry.get_x(position)
+        local y = geometry.get_y(position)
+        local nearest_x = math.max(o.left(), math.min(x, o.right()))
+        local nearest_y = math.max(o.top(), math.min(y, o.bottom()))
+        return geometry.distance_squared({ x = nearest_x, y = nearest_y }, position) <= radius * radius
+    end
+
     return o
 end

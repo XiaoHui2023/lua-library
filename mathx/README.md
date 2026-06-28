@@ -26,8 +26,10 @@
 init.lua             # math 增强入口与后端注入
 geometry/base.lua    # 几何对象共享基础
 geometry/circle.lua  # 圆形
+geometry/composite_shape.lua # 组合形状
 geometry/point.lua   # 点
 geometry/polygon.lua # 多边形
 geometry/rectangle.lua # 矩形
+spatial_hash_grid.lua # 空间哈希网格
 test.lua             # 数学与几何测试
 ```

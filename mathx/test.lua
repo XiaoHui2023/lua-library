@@ -117,6 +117,7 @@ mathx.use_lua_backend()
 
 local geometry = mathx.geometry
 local p = geometry.point({x = 3, y = 4})
+assert(geometry.distance_squared({x = 0, y = 0}, p) == 25, "distance_squared should work")
 assert(geometry.distance({x = 0, y = 0}, p) == 5, "distance should work")
 assert(p.move(1, 2).x == 4 and p.move(1, 2).y == 6, "point.move should return a moved copy")
 assert(p.add({x = 2, y = 3}).x == 5 and p.add({x = 2, y = 3}).y == 7, "point.add should return a summed copy")
@@ -133,6 +134,36 @@ local circle = geometry.circle({x = 0, y = 0}, 5)
 assert(circle.contains({x = 3, y = 4}), "circle.contains should include borders")
 assert(circle.intersects(geometry.circle({x = 8, y = 0}, 3)), "circle.intersects should detect touching circles")
 assert(geometry.circle({x = 0, y = 0}, -5).contains({x = 3, y = 4}), "circle should normalize negative radius")
+assert(geometry.circle_contains({x = 0, y = 0}, 5, {x = 3, y = 4}), "circle_contains should include borders")
+assert(geometry.circles_intersect({x = 0, y = 0}, 5, {x = 8, y = 0}, 3), "circles_intersect should detect touching circles")
+
+local grid = mathx.spatial_hash_grid.create({
+    cell_size = 64,
+    get_position = function(item)
+        return item.position
+    end,
+    get_radius = function(item)
+        return item.radius
+    end,
+})
+local grid_a = { position = { x = 0, y = 0 }, radius = 10 }
+local grid_b = { position = { x = 20, y = 0 }, radius = 10 }
+local grid_c = { position = { x = 300, y = 0 }, radius = 10 }
+grid.insert(grid_a)
+grid.insert(grid_b)
+grid.insert(grid_c)
+local candidate_count = 0
+grid.visit_circle_candidates({ x = 0, y = 0 }, 40, function()
+    candidate_count = candidate_count + 1
+end)
+assert(candidate_count == 2, "spatial hash grid should visit nearby candidates")
+grid_c.position = { x = 10, y = 0 }
+grid.update(grid_c)
+candidate_count = 0
+grid.visit_circle_candidates({ x = 0, y = 0 }, 40, function()
+    candidate_count = candidate_count + 1
+end)
+assert(candidate_count == 3, "spatial hash grid update should move candidates")
 
 local convex = {
     {x = 0, y = 0},
@@ -151,5 +182,18 @@ assert(not mathx.is_concave_polygon(convex), "convex polygon should not be conca
 assert(mathx.is_concave_polygon(concave), "concave polygon should be concave")
 assert(not mathx.is_concave_polygon({{x = 0, y = 0}, {x = 1, y = 1}, {x = 2, y = 0}}), "triangle cannot be concave")
 assert(geometry.polygon(concave).is_concave(), "geometry.polygon should expose concavity")
+assert(geometry.polygon(convex).contains({ x = 5, y = 5 }), "polygon contains should detect inside point")
+assert(not geometry.polygon(convex).contains({ x = 15, y = 5 }), "polygon contains should reject outside point")
+assert(geometry.polygon(convex).intersects_circle({ x = 11, y = 5 }, 2), "polygon should intersect touching circle")
+
+local composite = geometry.composite_shape({
+    shapes = {
+        geometry.circle({ x = 0, y = 0 }, 10),
+        geometry.rectangle({ x = 30, y = 0 }, 10, 10),
+    },
+})
+assert(composite.contains({ x = 0, y = 0 }), "composite should contain point in first shape")
+assert(composite.contains({ x = 30, y = 0 }), "composite should contain point in second shape")
+assert(composite.intersects_circle({ x = 40, y = 0 }, 5), "composite should intersect circle near any shape")
 
 print("mathx test ok")

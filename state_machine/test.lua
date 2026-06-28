@@ -112,11 +112,11 @@ local legacy = state_machine.create({
     name = "legacy_create",
     machine = machine,
     on_run = function(ctx)
-        legacy_ran = ctx.state.name == "legacy_create" and ctx.machine == machine
+        legacy_ran = ctx.state.name == "legacy_create" and ctx.machine == machine and ctx.input.reason == "legacy_start"
         ctx.once_done()
     end,
 })
-legacy:start()
+legacy:start({ reason = "legacy_start" })
 assert(legacy_ran, "create should support legacy on_run context")
 assert(legacy:get_status() == "done", "legacy once_done should complete state")
 
@@ -136,6 +136,34 @@ local tree = state_machine.build_tree({
 tree:start()
 assert(tree:get_status() == "done", "build_tree should finish after children sequence")
 assert(tree_log[1] == "a" and tree_log[2] == "b", "build_tree should run child states in order")
+
+local skill_registry = state_machine.registry({ name = "skill_state" })
+local animation_registry = state_machine.registry({ name = "animation_state" })
+skill_registry:register("instant", function(args)
+    args.name = args.name or "skill_instant"
+    args.on_run = function(ctx)
+        ctx.done("skill_done")
+    end
+    return state_machine.create(args)
+end)
+animation_registry:register("instant", function(args)
+    args.name = args.name or "animation_instant"
+    args.on_run = function(ctx)
+        ctx.done("animation_done")
+    end
+    return state_machine.create(args)
+end)
+
+local skill_tree = state_machine.builder({ registry = skill_registry }):build_tree({
+    { key = "instant" },
+})
+local animation_tree = state_machine.builder({ registry = animation_registry }):build_tree({
+    { key = "instant" },
+})
+skill_tree:start()
+animation_tree:start()
+assert(skill_tree.children[1].name == "skill_instant", "skill registry should resolve its own template")
+assert(animation_tree.children[1].name == "animation_instant", "animation registry should resolve its own template")
 
 machine:destroy("owner_destroy")
 assert(machine:is_destroyed(), "machine should be destroyed")

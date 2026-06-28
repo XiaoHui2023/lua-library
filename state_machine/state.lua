@@ -119,8 +119,7 @@ local function create_state(args)
                 state = current_state,
                 data = current_state.data,
                 parent = current_state.parent,
-                source = context and context.source or nil,
-                target_point = context and context.target_point or nil,
+                input = context,
             }
             run_context.done = function(reason)
                 current_state:done(reason or "done")

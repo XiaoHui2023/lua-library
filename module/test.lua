@@ -6,7 +6,7 @@ package.path = library_root .. "/?.lua;" .. library_root .. "/?/init.lua;" .. pa
 
 local module = require "module"
 local system = module.system
-local blueprint = module.blueprint
+local composition = module.composition
 local addon = module.addon
 
 local function assert_same(actual, expected, message)
@@ -39,35 +39,29 @@ assert_same(table.concat(system_order, ","), "dependency,dependent", "system dep
 system.initialize_all()
 assert_same(#system_order, 2, "system initialize_all should be idempotent")
 
-local loaded = {}
-blueprint({
-    id = "test.blueprint.base",
-    name = "Base Blueprint",
-    description = "Base test blueprint",
-    loader = function()
-        loaded[#loaded + 1] = "base"
-        return { name = "base" }
+local compose_order = {}
+composition({
+    id = "test.composition.profile",
+    priority = composition.PRIORITY.PROFILE,
+    compose = function()
+        compose_order[#compose_order + 1] = "profile"
     end,
 })
-blueprint({
-    id = "test.blueprint.child",
-    name = "Child Blueprint",
-    description = "Child test blueprint",
+composition({
+    id = "test.composition.scene",
     dependencies = {
-        "test.blueprint.base",
+        "test.composition.profile",
     },
-    loader = function()
-        loaded[#loaded + 1] = "child"
-        return { name = "child" }
+    priority = composition.PRIORITY.SCENE,
+    compose = function()
+        compose_order[#compose_order + 1] = "scene"
     end,
 })
 
-assert_same(#loaded, 0, "blueprint registration should be lazy")
-local child = blueprint.load("test.blueprint.child")
-assert_same(child.name, "child", "blueprint load result")
-assert_same(table.concat(loaded, ","), "base,child", "blueprint dependency load order")
-blueprint.load("test.blueprint.child")
-assert_same(#loaded, 2, "blueprint load should be idempotent")
+composition.compose_all()
+assert_same(table.concat(compose_order, ","), "profile,scene", "composition dependency order")
+composition.compose_all()
+assert_same(#compose_order, 2, "composition compose_all should be idempotent")
 
 local activation_count = 0
 local cleanup_count = 0

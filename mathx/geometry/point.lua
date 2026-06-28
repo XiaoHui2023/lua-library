@@ -4,12 +4,19 @@ local geometry = require "mathx.geometry.base"
 ---@param p1 lib.point
 ---@param p2 lib.point
 ---@return number
-function geometry.distance(p1, p2)
+function geometry.distance_squared(p1, p2)
     local x1 = geometry.get_x(p1)
     local y1 = geometry.get_y(p1)
     local x2 = geometry.get_x(p2)
     local y2 = geometry.get_y(p2)
-    return math.sqrt((x1 - x2) ^ 2 + (y1 - y2) ^ 2)
+    return (x1 - x2) ^ 2 + (y1 - y2) ^ 2
+end
+
+---@param p1 lib.point
+---@param p2 lib.point
+---@return number
+function geometry.distance(p1, p2)
+    return math.sqrt(geometry.distance_squared(p1, p2))
 end
 
 ---@param point? lib.point 初始坐标；省略时使用原点

@@ -458,5 +458,6 @@ end
 ---@type lib.mathx.geometry
 geometry = require "lib.mathx.geometry"
 g.geometry = geometry
+g.spatial_hash_grid = require "lib.mathx.spatial_hash_grid"
 
 return g

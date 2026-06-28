@@ -1,9 +1,9 @@
 # module
 
-模块化运行对象库，用 registry 管理 system、blueprint 和 addon。
+模块化运行对象库，用 registry 管理 system、composition 和 addon。
 
 - system 表示可启动、可关闭的运行系统。
-- blueprint 表示可注册、可创建的蓝图。
+- composition 表示 scene 组合根里的装配单元。
 - addon 表示可按顺序装配的扩展。
 
 ## 设计特性
@@ -18,14 +18,14 @@
 
 ### 基础对象
 
-`base` 提供共享生命周期和命名字段。system、blueprint、addon 在各自语义上复用同一套基础能力。
+`base` 提供共享生命周期和命名字段。system、composition、addon 在各自语义上复用同一套基础能力。
 
 ## 目录
 
 ```text
 addon.lua      # addon 注册与实例
 base.lua       # 模块基础对象
-blueprint.lua  # blueprint 注册与创建
+composition.lua # composition 注册与装配
 init.lua       # 模块库门面
 order.lua      # 顺序处理
 system.lua     # system 注册与生命周期

@@ -5,5 +5,6 @@ require "mathx.geometry.point"
 require "mathx.geometry.rectangle"
 require "mathx.geometry.circle"
 require "mathx.geometry.polygon"
+require "mathx.geometry.composite_shape"
 
 return geometry
