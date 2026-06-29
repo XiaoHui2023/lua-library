@@ -10,6 +10,98 @@ local M = {}
 
 ---@alias lib.template.value_reader fun(input:table, placeholder:string, context:table):(boolean, any)
 
+local function read_callable(value)
+    if type(value) == "function" then
+        local ok, result = pcall(value)
+        if ok then
+            return result
+        end
+        return nil
+    end
+
+    local metatable = type(value) == "table" and getmetatable(value) or nil
+    if metatable == nil or type(metatable.__call) ~= "function" then
+        return value
+    end
+    local ok, result = pcall(value)
+    if ok then
+        return result
+    end
+    return nil
+end
+
+---@param data table|function|nil
+---@param path string
+---@return any
+function M.get_path(data, path)
+    local value = read_callable(data)
+    for part in string.gmatch(path, "[^%.]+") do
+        value = read_callable(value)
+        if value == nil or type(value) ~= "table" then
+            return nil
+        end
+        value = value[part]
+    end
+    return read_callable(value)
+end
+
+---@param value any
+---@return string
+function M.format_value(value)
+    if value == nil then
+        return ""
+    end
+    if type(value) == "number" then
+        return tostring(math.floor(value + 0.5))
+    end
+    return tostring(value)
+end
+
+---@param args table
+---@return table
+function M.create_path_context(args)
+    assert(type(args) == "table", "template path context args must be table")
+    local input = args.input
+    return {
+        name = args.name,
+        find = function(placeholder)
+            local value = M.get_path(input, placeholder)
+            if value == nil then
+                return nil
+            end
+            return {
+                value = value,
+            }
+        end,
+        get_prop_fields = function()
+            return {}
+        end,
+    }
+end
+
+---@param template_text string?
+---@param data table|function|nil
+---@return string
+function M.render_text(template_text, data)
+    template_text = template_text or ""
+    template_text = string.gsub(template_text, "{{%s*([%w_%.]+)%s*}}", "{%1}")
+    local renderer = M.create_template_renderer({
+        exposed_contexts = {
+            M.create_path_context({
+                input = data,
+            }),
+        },
+    })
+    renderer.placeholder_renderers.add(M.create_placeholder_renderer({
+        stage = "format",
+        priority = -100,
+        on_render = function(context)
+            context.value = M.format_value(context.value)
+        end,
+    }))
+    return renderer(template_text)
+end
+
 local VALID_STAGES = {
     format = true,
     locale = true,
